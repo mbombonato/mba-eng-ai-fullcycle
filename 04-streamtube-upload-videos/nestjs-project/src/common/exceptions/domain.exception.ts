@@ -48,3 +48,65 @@ export class TokenReuseDetectedException extends DomainException {
     );
   }
 }
+
+export class ChannelNotFoundException extends DomainException {
+  constructor() {
+    super('CHANNEL_NOT_FOUND', 404, 'Channel not found for the current user');
+  }
+}
+
+export class VideoNotFoundException extends DomainException {
+  constructor() {
+    super('VIDEO_NOT_FOUND', 404, 'Video not found');
+  }
+}
+
+export class InvalidVideoStatusException extends DomainException {
+  constructor() {
+    super(
+      'INVALID_VIDEO_STATUS',
+      409,
+      'Video is not in a valid status for this operation',
+    );
+  }
+}
+
+export class InvalidUploadPartsException extends DomainException {
+  constructor() {
+    super(
+      'INVALID_UPLOAD_PARTS',
+      400,
+      'Uploaded parts are invalid or incomplete',
+    );
+  }
+}
+
+export class UploadSizeExceededException extends DomainException {
+  constructor() {
+    super('UPLOAD_SIZE_EXCEEDED', 422, 'Uploaded file exceeds the 10 GB limit');
+  }
+}
+
+export class VideoNotReadyException extends DomainException {
+  constructor() {
+    super('VIDEO_NOT_READY', 409, 'Video is not ready yet');
+  }
+}
+
+export class ThumbnailNotAvailableException extends DomainException {
+  constructor() {
+    super('THUMBNAIL_NOT_AVAILABLE', 404, 'Thumbnail not available');
+  }
+}
+
+export class NotAVideoFileException extends DomainException {
+  constructor(detail?: string) {
+    super(
+      'NOT_A_VIDEO_FILE',
+      422,
+      detail
+        ? `File is not a valid video: ${detail}`
+        : 'File is not a valid video',
+    );
+  }
+}
