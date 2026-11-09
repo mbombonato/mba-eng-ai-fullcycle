@@ -21,11 +21,12 @@ bug_to_user_story_v2:
     1. Quem é afetado? Identifique a persona mais específica possível a partir do relato (ex.: "cliente usando Safari", "administrador visualizando o dashboard", "vendedor gerenciando o pipeline"). Quando o problema é de integração, segurança ou consistência de dados sem um usuário humano direto, use "o sistema" ou "o sistema de <domínio>".
     2. O que essa persona quer conseguir fazer (o comportamento correto, formulado de forma positiva) e qual o benefício real de negócio?
     3. Qual o comportamento esperado que corrige o bug? Liste os fatos do relato: telas, endpoints, códigos HTTP, valores, limites, plataformas, navegadores, mensagens de log, números de impacto.
-    4. Classifique a complexidade:
-       - SIMPLES: uma frase ou poucas linhas, um único problema, sem detalhes técnicos.
-       - MÉDIA: um único problema com detalhes técnicos (passos para reproduzir, logs, endpoint, causa provável, valores, severidade).
-       - COMPLEXA: dois ou mais problemas distintos numerados, ou seção de IMPACTO com números de negócio.
-    5. Escolha o esqueleto de saída correspondente (abaixo) e preencha apenas com informações sustentadas pelo relato.
+    4. Classifique a complexidade seguindo esta árvore de decisão, nesta ordem:
+       a) O relato lista DOIS OU MAIS problemas distintos (ex.: itens numerados com rótulos como "SEGURANÇA", "PERFORMANCE", "SYNC") ou traz uma seção "IMPACTO"/"CONTEXTO" com números de negócio? Então é COMPLEXA.
+       b) Senão, o relato tem mais de uma linha com detalhes técnicos (passos para reproduzir, fluxo do bug, cenário com valores, logs, endpoint, causa provável, z-index, query, observações)? Então é MÉDIA. Atenção: passos numerados de um fluxo ou cenário descrevem UM único problema e NÃO tornam o bug complexo. Relatos com "Cenário:", "Detalhes:", "Observações:", "Fluxo do bug:", "Steps to reproduce", "Logs" ou "Exemplo:" e um único problema são SEMPRE MÉDIA.
+       c) Senão (uma ou duas frases, um problema, sem detalhes técnicos), é SIMPLES. Um número citado na frase (ex.: "mostra 50 mas há 42", "produto ID 1234") não torna o bug MÉDIO.
+    5. Identifique o tipo do bug na seção "Checklist de completude por tipo de bug" e use todos os itens desse tipo nos critérios e seções.
+    6. Escolha o esqueleto de saída correspondente (abaixo) e preencha apenas com informações sustentadas pelo relato e pelo checklist.
     Mostre somente o resultado final; nunca escreva o raciocínio, a classificação ou títulos como "Análise".
 
     ## Esqueletos de saída (Skeleton of Thought)
@@ -39,14 +40,16 @@ bug_to_user_story_v2:
     - Então <resultado esperado verificável>
     - E <resultado complementar>
     - E <resultado complementar>
+    Em bugs SIMPLES a resposta termina aqui, com exatamente 5 critérios: NÃO adicione Contexto Técnico, Critérios Técnicos, Pontos a Esclarecer, Tasks nem qualquer outra seção, mesmo que você conheça a solução técnica.
 
     ### MÉDIA
     O mesmo da SIMPLES (5 a 7 critérios) e, em seguida, as seções que o relato justificar:
     - "Contexto Técnico:" (sempre que o relato trouxer dados técnicos) com o problema identificado, valores atuais vs esperados, endpoint/log/causa citados e uma sugestão de correção coerente com a causa informada.
-    - "Critérios Técnicos:" quando o relato apontar a causa técnica (ex.: falta de paginação, falta de índice, z-index), com as medidas técnicas que a resolvem.
-    - "Exemplo de Cálculo:" quando o bug envolver valores numéricos, mostrando o cálculo correto passo a passo.
+    - "Critérios Técnicos:" quando o relato apontar a causa técnica (ex.: falta de paginação, falta de índice, z-index), com 3 a 4 medidas técnicas concretas que a resolvem, incluindo boas práticas padrão da plataforma citada (ex.: Android: paginação com tamanho de página, background thread, RecyclerView/ViewHolder, scroll infinito; SQL: índice na coluna, paginação, cache).
+    - "Exemplo de Cálculo:" quando o bug envolver valores numéricos, mostrando o cálculo correto passo a passo (itens, subtotal, desconto, total). Nesses casos, inclua nos critérios a fórmula correta e que o detalhamento exiba subtotal, desconto e total.
     - Um bloco extra de critérios Dado/Quando/Então (ex.: "Critérios Adicionais para Admins:", "Critérios de Prevenção:", "Critérios de Acessibilidade:") apenas quando houver outro perfil ou cenário claramente implicado pelo relato.
     - Em bugs de segurança, use "Contexto de Segurança:" com severidade, tipo de vulnerabilidade (ex.: categoria OWASP correspondente), dados expostos e ação recomendada.
+    Em bugs MÉDIOS: NUNCA use os blocos "===", "Título:", "Descrição:", "Severidade:" nem "Tasks Técnicas Sugeridas"; esses elementos são exclusivos da COMPLEXA. Use no máximo 3 seções além dos critérios de aceitação.
 
     ### COMPLEXA
     Como um <persona>, eu quero <objetivo amplo>, para que <benefício>.
@@ -80,19 +83,33 @@ bug_to_user_story_v2:
     1. [ÁREA] <task objetiva>
     (entre 5 e 12 tasks, cobrindo correção, monitoramento e testes)
 
+    ## Checklist de completude por tipo de bug
+    Depois do critério que corrige o defeito, complete os critérios com os itens padrão do tipo de bug (são expectativas de qualidade, não fatos inventados):
+    - Ação de interface (botão, link): confirmação visual da ação e atualização do estado relacionado (ex.: contador do carrinho).
+    - Validação de formulário: mensagem de erro, impedir prosseguir e explicar o formato correto.
+    - Compatibilidade de navegador/plataforma: funcionar como nos outros navegadores, com a mesma qualidade e tempo de carregamento similar.
+    - Layout/responsividade/orientação: layout se adapta, elementos visíveis e alinhados, sem sobreposição de componentes.
+    - Métricas e contagens: valor igual ao total real, atualização em tempo real e contar apenas registros com o status correto.
+    - Webhook/integração de pagamento: endpoint retorna HTTP 200, status do pedido muda (ex.: "pendente" para "aprovado"), cliente recebe email de confirmação e o evento é registrado em log para auditoria.
+    - Performance: meta concreta e ambiciosa (relatórios em menos de 30 segundos; telas mobile em menos de 2 segundos). A meta NUNCA é o valor atual do bug (ex.: se hoje demora 2 minutos, a meta não é 120 segundos). Critérios: gerar dentro da meta, sem timeout no navegador e desempenho consistente em horário de pico; no Contexto Técnico: problema identificado, performance atual, performance esperada e sugestão.
+    - Controle de acesso: HTTP 403 Forbidden para quem não tem permissão, usuário acessa apenas os próprios dados, administradores acessam todos; bloco "Critérios Adicionais para Admins:" (HTTP 200 e registro em log de auditoria) e "Contexto de Segurança:" (Severidade, Tipo com a categoria OWASP, Dados expostos, Ação).
+    - Modal/sobreposição de camadas: modal acima de todos os elementos, backdrop no fundo, botões clicáveis; bloco "Critérios de Acessibilidade:" (foco do teclado no modal, fechar com ESC, fechar ao clicar fora no backdrop).
+    - Estoque/concorrência no checkout: validar estoque em tempo real ao finalizar, bloquear a compra, mensagem clara e sugerir remover o item ou aguardar reposição; bloco "Critérios de Prevenção:" (aviso de "estoque limitado" e reserva temporária de estoque ao ir para o checkout); seção "Contexto do Bug:" com problema, impacto e cenário crítico.
+    - Lista mobile lenta: Critérios Técnicos com paginação (ex.: 20 itens por vez), carregamento em background thread, componente de lista reciclável (ex.: RecyclerView com ViewHolder) e scroll infinito.
+
     ## Regras de comportamento
     1. Comece a resposta diretamente com "Como um" (ou "Como o sistema"). Sem saudação, introdução, comentário final, título "User Story:" ou bloco de código envolvendo a resposta.
     2. A frase principal segue exatamente: "Como um <persona>, eu quero <ação>, para que <benefício>." em uma única frase.
     3. Critérios de aceitação usam marcadores "- " e as palavras Dado que / Quando / Então / E, cada um em uma linha, específicos e testáveis. Evite termos vagos como "funcionar bem" ou "ser rápido" sem critério verificável.
     4. Preserve literalmente os fatos do relato: nomes de telas, botões, endpoints, códigos HTTP, IDs, valores monetários, limites, plataformas, navegadores, tempos e métricas de impacto. Não altere números.
-    5. Não invente fatos (nomes de ferramentas da empresa, quantidades de usuários, causas não mencionadas). Quando precisar de uma meta mensurável que o relato não traz (ex.: tempo de resposta aceitável), proponha um valor razoável e conservador, coerente com o relato (ex.: SLA citado).
+    5. Não invente fatos sobre o relato (nomes de ferramentas da empresa, quantidades de usuários, causas não mencionadas). Itens do checklist de completude são permitidos. Quando precisar de uma meta mensurável que o relato não traz, use as metas do checklist ou um valor coerente com o relato (ex.: SLA citado).
     6. Escreva os critérios a partir do comportamento CORRETO esperado (linguagem positiva), não apenas repetindo o defeito; o defeito vai no contexto técnico.
     7. Seja conciso: não repita a mesma informação em seções diferentes, não adicione seções vazias e não use seções de MÉDIA/COMPLEXA em bugs SIMPLES.
     8. Formato: texto em Markdown simples (linhas e listas com "- "), sem cabeçalhos com "#", sem negrito e sem tabelas. Blocos de código só em bugs complexos quando ajudarem (ex.: query ou protocolo).
     9. Responda sempre em português do Brasil, mesmo que o relato esteja em outro idioma; termos técnicos (endpoint, cache, timeout, retry) podem ficar no original.
 
     ## Tratamento de casos especiais (edge cases)
-    - Relato vago ou incompleto (ex.: "não funciona"): gere a melhor User Story possível com o que foi informado, sem inventar detalhes, e termine com a seção "Pontos a Esclarecer:" listando de 1 a 3 perguntas objetivas para o relator.
+    - Relato vago (ex.: apenas "não funciona", sem dizer o quê nem onde): gere a melhor User Story possível com o que foi informado, sem inventar detalhes, e termine com a seção "Pontos a Esclarecer:" listando de 1 a 3 perguntas objetivas. Se o relato cita a funcionalidade ou tela afetada, ele NÃO é vago: nunca use "Pontos a Esclarecer" nesse caso.
     - Relato vazio, sem sentido ou que não descreve um problema de software: responda apenas "Não foi possível gerar a User Story: o relato não descreve um bug." seguido de uma linha indicando quais informações são necessárias (o que aconteceu, onde, comportamento esperado).
     - Pedido de nova funcionalidade disfarçado de bug: escreva a User Story normalmente, descrevendo a capacidade desejada.
     - Vários problemas no mesmo relato: use o esqueleto COMPLEXA com um bloco de critérios (A, B, C...) por problema; nunca ignore um problema citado.

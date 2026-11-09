@@ -99,8 +99,9 @@ correto? qual a complexidade?). Pensar passo a passo melhora a escolha da person
 nível de detalhe. Mas, como a saída bruta é avaliada, o raciocínio **não pode aparecer**.
 
 **Como apliquei:** uma seção "Processo de raciocínio (faça internamente, passo a passo,
-sem exibir)" com 5 passos — persona → objetivo/benefício → fatos do relato →
-classificação de complexidade → escolha do esqueleto — e a regra explícita
+sem exibir)" com 6 passos — persona → objetivo/benefício → fatos do relato →
+classificação de complexidade (árvore de decisão) → tipo do bug no checklist de
+completude → escolha do esqueleto — e a regra explícita
 "Mostre somente o resultado final; nunca escreva o raciocínio".
 
 ### 4. Skeleton of Thought
@@ -119,6 +120,11 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 - **Regras explícitas de comportamento** (9 regras): começar direto com "Como um",
   template exato da frase, Dado/Quando/Então, preservar literalmente números/endpoints,
   não inventar fatos, linguagem positiva, concisão, Markdown simples, pt-BR.
+- **Checklist de completude por tipo de bug**: para cada tipo de defeito (ação de UI,
+  validação de formulário, compatibilidade, métricas, webhook, performance, controle de
+  acesso, modal, estoque, lista mobile), os critérios que um PM experiente sempre cobre
+  (ex.: controle de acesso → 403, acesso só aos próprios dados, admins e log de auditoria).
+  Foi o que mais elevou o recall do F1 sem inventar fatos sobre o relato.
 - **Edge cases**: relato vago (gera story + "Pontos a Esclarecer"), relato vazio/sem
   sentido, pedido de feature disfarçado de bug, vários problemas no mesmo relato,
   dados sensíveis (não reproduzir) e prompt injection no relato (tratar como dado).
@@ -129,14 +135,13 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 ## Resultados Finais
 
-> ⚠️ **TODO (preencher após rodar a avaliação):** esta seção depende de executar
-> `python src/evaluate.py` com as suas chaves. Substitua os marcadores abaixo.
-
 ### Evidências no LangSmith
 
 - **Link público do dataset de avaliação (com experimentos):** `TODO: colar URL gerada por Client().share_dataset(...)`
-- **Prompt público no Hub:** `TODO: https://smith.langchain.com/hub/<seu_handle>/bug_to_user_story_v2`
-- **Tracing detalhado (≥ 3 exemplos):** `TODO: links ou screenshots de 3 runs do experimento`
+- **Prompt público no Hub:** https://smith.langchain.com/hub/mbombonato/bug_to_user_story_v2
+- **Experimento aprovado:** `mbombonato-bug_to_user_story_v2-f0ee0c98` (15 runs com tracing completo de
+  entrada, prompt e saída, e as 5 notas gravadas como feedback em cada run)
+- **Saída completa do terminal:** [`docs/evaluate_v2_output.txt`](docs/evaluate_v2_output.txt)
 
 ### Screenshots
 
@@ -151,26 +156,29 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 | Métrica | v1 (original) | v2 (otimizado) |
 |---|---|---|
-| Helpfulness | TODO | TODO |
-| Correctness | TODO | TODO |
-| F1-Score | TODO | TODO |
-| Clarity | TODO | TODO |
-| Precision | TODO | TODO |
-| **Média** | TODO | TODO |
+| Helpfulness | 0.89 | **0.90** ✓ |
+| Correctness | 0.84 | **0.88** ✓ |
+| F1-Score | 0.79 ✗ | **0.87** ✓ |
+| Clarity | 0.89 | **0.91** ✓ |
+| Precision | 0.89 | **0.89** ✓ |
+| **Média** | 0.86 (reprovado: F1 < 0.8) | **0.89 (APROVADO)** |
 
-Provider/modelos usados: `TODO: LLM_PROVIDER / LLM_MODEL / EVAL_MODEL`
+Provider/modelos usados: `LLM_PROVIDER=openai` / `LLM_MODEL=gpt-4o` / `EVAL_MODEL=gpt-4o` (temperature 0).
 
-> Observação: o `evaluate.py` avalia apenas `{username}/bug_to_user_story_v2`. Para
-> obter as notas do v1, uma opção é fazer push temporário do v1 com o nome v2 (ou
-> avaliar o v1 no Playground/Experiments do LangSmith) e registrar aqui.
+> As notas do v2 vêm do `python src/evaluate.py` oficial. As do v1 foram medidas com as
+> **mesmas funções** de `src/metrics.py`, os mesmos 15 exemplos e os mesmos modelos, por um
+> script local que monta o v1 de `prompts/bug_to_user_story_v1.yml`. Assim o v2 público no
+> Hub não precisou ser sobrescrito. O ganho se concentra no **F1-Score** (+0.08), a única
+> métrica que reprovava o v1: ele mede quanto da referência é coberto sem sobrar informação.
 
 ### Histórico de iterações
 
 | Iteração | Mudança no prompt | Métrica mais baixa | Resultado |
 |---|---|---|---|
-| 1 | Versão inicial descrita acima | TODO | TODO |
-| 2 | TODO | TODO | TODO |
-| 3 | TODO | TODO | TODO |
+| 1 | Versão inicial descrita acima (gpt-4o-mini gerando) | F1 0.76 | Reprovado. O modelo tratava bugs médios como complexos (blocos `===` e Tasks) e adicionava seções a bugs simples |
+| 2 | Árvore de decisão explícita para a complexidade ("passos de um fluxo NÃO tornam o bug complexo"), "em bugs SIMPLES a resposta termina aqui" e proibição de `===`/Tasks em bugs médios | F1 0.79 | Reprovado por pouco, com menos excesso de informação |
+| 3 | **Checklist de completude por tipo de bug** (UI, validação, compatibilidade, métricas, webhook, performance, controle de acesso, modal, estoque, lista mobile) ligado ao CoT; a meta de performance nunca é o valor atual do bug; "Pontos a Esclarecer" só em relatos realmente vagos | F1 ≈ 0.79–0.80 (gpt-4o-mini) | No limite: o gpt-4o-mini ignorava parte das instruções longas |
+| 4 | Mesmo prompt, com `LLM_MODEL=gpt-4o` (melhor *instruction following*; o desafio deixa a escolha de modelo livre) | F1 0.87 | ✅ **Aprovado**: todas as métricas ≥ 0.8 |
 
 ### Comparação v1 × v2: o que mudou e por quê
 
