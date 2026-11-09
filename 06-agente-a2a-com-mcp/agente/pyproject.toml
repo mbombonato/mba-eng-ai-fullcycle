@@ -1,0 +1,14 @@
+[project]
+name = "agente-central-de-salas"
+version = "1.0.0"
+description = "Agente A2A (JSON-RPC, v1.0) que e host MCP da Central de Salas"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp==2.3.0",
+    "httpx==0.28.1",
+    "starlette==1.10.0",
+    "uvicorn==0.54.0",
+]
+
+[tool.uv]
+package = false
