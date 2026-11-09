@@ -179,6 +179,8 @@ uv run --extra openai aurora-api
 
 O fluxo completo do avaliador (passos 1 a 14, com reinício e aprovações simultâneas) foi
 executado por HTTP com `openai/gpt-4.1-mini`, e todas as verificações passaram.
+Com o provedor padrão (`gemini-3.6-flash` no AI Studio), o fluxo também foi validado por HTTP:
+consulta ao regulamento, pedido de reserva com confirmação pendente, aprovação e reserva gravada.
 
 ### Testes (sem chave de API)
 
