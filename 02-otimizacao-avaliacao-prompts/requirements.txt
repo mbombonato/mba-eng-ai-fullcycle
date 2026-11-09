@@ -1,0 +1,21 @@
+# LangChain
+# Obs: o meta-pacote `langchain` não é mais necessário. A partir da v1 ele deixou
+# de expor o módulo `langchain.hub`, cujo papel (pull/push de prompts) passou a ser
+# do cliente do LangSmith. Aqui usamos apenas o core, que traz ChatPromptTemplate,
+# as mensagens e a composição de chains com o operador `|`.
+langchain-core==1.6.4
+
+# LangSmith: Prompt Hub, tracing, datasets e avaliação
+langsmith==0.13.0
+
+# Providers de LLM
+langchain-openai==1.6.2
+langchain-google-genai==4.4.0
+
+# Utilitários
+python-dotenv==1.2.3
+pyyaml==6.0.3
+pydantic==2.13.5
+
+# Testes
+pytest==9.1.1
