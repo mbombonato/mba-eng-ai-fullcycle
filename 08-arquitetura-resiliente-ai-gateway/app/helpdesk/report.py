@@ -1,21 +1,25 @@
+import json
+
 from fastapi import HTTPException
 
-from . import config, llm, tickets
+from .ports import TextModel, TicketSource
 from .schemas import PeriodInput, Topic, TopicsReport
 
+CAPABILITY = "topics-report"
 
-def topics(period: PeriodInput) -> TopicsReport:
+
+def topics(period: PeriodInput, model: TextModel, tickets: TicketSource, tickets_per_call: int) -> TopicsReport:
     if period.start > period.end:
         raise HTTPException(status_code=422, detail="A data inicial é posterior à data final")
 
     selected = tickets.in_period(period.start, period.end)
 
-    # O mês inteiro não cabe numa chamada: processa em lotes, um depois do outro.
+    # O período inteiro não cabe numa chamada: processa em lotes, um depois do outro.
     totals: dict[str, dict] = {}
-    for first in range(0, len(selected), config.TICKETS_PER_CALL):
-        batch = selected[first:first + config.TICKETS_PER_CALL]
+    for first in range(0, len(selected), tickets_per_call):
+        batch = selected[first:first + tickets_per_call]
         content = "\n".join(f"[{t['id']}] {t['text']}" for t in batch)
-        answer = llm.parse_json(llm.call_anthropic(config.REPORT_MODEL, "topics", content))
+        answer = json.loads(model.complete(CAPABILITY, "topics", content))
         for item in answer["topics"]:
             current = totals.setdefault(item["topic"], {"count": 0, "examples": []})
             current["count"] += item["count"]

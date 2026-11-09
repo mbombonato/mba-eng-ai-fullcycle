@@ -3,21 +3,65 @@ services:
     build: ./provider-fake
     env_file: .env
     ports:
-      - "8090:8090"
+      - "${PROVIDER_FAKE_PORT:-8090}:8090"
 
   edge:
     image: nginx:1.27-alpine
     ports:
-      - "8000:80"
+      - "${EDGE_PORT:-8000}:80"
     volumes:
       - ./edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       app:
         condition: service_healthy
 
+  # Banco do gateway: guarda chaves virtuais, gasto e orçamentos (ADR 0006).
+  gateway-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${GATEWAY_DB_PASSWORD}
+      POSTGRES_DB: litellm
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm -d litellm"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # AI Gateway: único lugar com as chaves dos providers (ADR 0002).
+  gateway:
+    image: ghcr.io/berriai/litellm:v1.102.1
+    entrypoint: ["/gateway/entrypoint.sh"]
+    environment:
+      FAKE_OPENAI_KEY: ${FAKE_OPENAI_KEY}
+      FAKE_ANTHROPIC_KEY: ${FAKE_ANTHROPIC_KEY}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      DATABASE_URL: postgresql://litellm:${GATEWAY_DB_PASSWORD}@gateway-db:5432/litellm
+      GATEWAY_REALTIME_KEY: ${GATEWAY_REALTIME_KEY}
+      GATEWAY_REPORTS_KEY: ${GATEWAY_REPORTS_KEY}
+    volumes:
+      - ./gateway:/gateway:ro
+    ports:
+      - "${GATEWAY_PORT:-4000}:4000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, sys; sys.exit(not os.path.exists('/tmp/keys-ready'))"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+      start_period: 30s
+    depends_on:
+      gateway-db:
+        condition: service_healthy
+      provider-fake:
+        condition: service_healthy
+
   app:
     build: ./app
-    env_file: .env
+    # Sem env_file: a aplicação recebe só o endereço do gateway e a chave virtual dela.
+    environment:
+      GATEWAY_URL: http://gateway:4000/v1
+      GATEWAY_REALTIME_KEY: ${GATEWAY_REALTIME_KEY}
+      GATEWAY_REPORTS_KEY: ${GATEWAY_REPORTS_KEY}
     volumes:
       - ./data:/data:ro
     healthcheck:
@@ -26,5 +70,5 @@ services:
       timeout: 3s
       retries: 20
     depends_on:
-      provider-fake:
+      gateway:
         condition: service_healthy

@@ -1,0 +1,99 @@
+# Configuração do AI Gateway (LiteLLM Proxy) — ADRs 0002, 0003, 0005 e 0006.
+#
+# A aplicação só conhece as quatro capacidades lógicas (ticket-classification,
+# reply-suggestion, topics-report, order-extraction). Para cada uma há:
+#   <capacidade>           destino primário (modelo large)
+#   <capacidade>-fallback  fallback técnico: o large equivalente no OUTRO provider
+#   <capacidade>-weak      fallback com modelo fraco (mini), só onde o ADR 0005 aceita
+# Trocar o modelo físico de uma capacidade = editar o "model:" do destino e rodar
+# `docker compose restart gateway`.
+#
+# Preços (US$/token) copiados do README do provider-fake: sem eles o gateway
+# calcula custo zero e nenhum orçamento estoura.
+
+x-openai-large: &openai-large
+  model: openai/gpt-fake-large
+  api_base: http://provider-fake:8090/openai/v1
+  api_key: os.environ/FAKE_OPENAI_KEY
+  input_cost_per_token: 0.0000025
+  output_cost_per_token: 0.00001
+
+x-openai-mini: &openai-mini
+  model: openai/gpt-fake-mini
+  api_base: http://provider-fake:8090/openai/v1
+  api_key: os.environ/FAKE_OPENAI_KEY
+  input_cost_per_token: 0.00000015
+  output_cost_per_token: 0.0000006
+
+x-anthropic-large: &anthropic-large
+  model: anthropic/claude-fake-large
+  api_base: http://provider-fake:8090/anthropic
+  api_key: os.environ/FAKE_ANTHROPIC_KEY
+  input_cost_per_token: 0.000003
+  output_cost_per_token: 0.000015
+
+x-anthropic-mini: &anthropic-mini
+  model: anthropic/claude-fake-mini
+  api_base: http://provider-fake:8090/anthropic
+  api_key: os.environ/FAKE_ANTHROPIC_KEY
+  input_cost_per_token: 0.0000008
+  output_cost_per_token: 0.000004
+
+model_list:
+  # F1 Classificar ticket: síncrono, cliente esperando (orçamento de 3 s).
+  - model_name: ticket-classification
+    litellm_params: {<<: *openai-large, timeout: 4}
+  - model_name: ticket-classification-fallback
+    litellm_params: {<<: *anthropic-large, timeout: 4}
+  - model_name: ticket-classification-weak
+    litellm_params: {<<: *openai-mini, timeout: 4}
+
+  # F2 Sugerir resposta: streaming. stream_timeout limita a espera pelo primeiro trecho.
+  - model_name: reply-suggestion
+    litellm_params: {<<: *anthropic-large, timeout: 60, stream_timeout: 4}
+  - model_name: reply-suggestion-fallback
+    litellm_params: {<<: *openai-large, timeout: 60, stream_timeout: 4}
+  - model_name: reply-suggestion-weak
+    litellm_params: {<<: *anthropic-mini, timeout: 60, stream_timeout: 4}
+
+  # F3 Relatório de temas: assíncrono, um lote leva ~10 s no large.
+  - model_name: topics-report
+    litellm_params: {<<: *anthropic-large, timeout: 20}
+  - model_name: topics-report-fallback
+    litellm_params: {<<: *openai-large, timeout: 20}
+  - model_name: topics-report-weak
+    litellm_params: {<<: *anthropic-mini, timeout: 20}
+
+  # F4 Extrair dados do pedido: síncrono, sem fallback fraco (o mini erra o pedido).
+  - model_name: order-extraction
+    litellm_params: {<<: *openai-large, timeout: 4}
+  - model_name: order-extraction-fallback
+    litellm_params: {<<: *anthropic-large, timeout: 4}
+
+router_settings:
+  # Retry limitado: 1 nova tentativa por destino (2 tentativas no máximo), com backoff
+  # exponencial (0,5 s * 2^n + jitter) ou o Retry-After do provider.
+  num_retries: 1
+  retry_policy:
+    TimeoutErrorRetries: 0          # quem travou uma vez trava de novo: vai direto ao fallback
+    InternalServerErrorRetries: 1
+    RateLimitErrorRetries: 1
+    ContentPolicyViolationErrorRetries: 0
+    BadRequestErrorRetries: 0
+    AuthenticationErrorRetries: 0
+  fallbacks:
+    - ticket-classification: [ticket-classification-fallback, ticket-classification-weak]
+    - reply-suggestion: [reply-suggestion-fallback, reply-suggestion-weak]
+    - topics-report: [topics-report-fallback, topics-report-weak]
+    - order-extraction: [order-extraction-fallback]
+  # Sem circuit breaker (fora de escopo): cada requisição percorre a cadeia inteira.
+  disable_cooldowns: true
+
+litellm_settings:
+  # O próprio LiteLLM não deve repetir nada além do que o router declara.
+  num_retries: 0
+  request_timeout: 60
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
