@@ -52,6 +52,53 @@ describe('JwtAuthGuard', () => {
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
+  describe('optional authentication on @Public() routes', () => {
+    beforeEach(() => {
+      mockReflector.getAllAndOverride.mockReturnValue(true);
+    });
+
+    it('attaches the payload when a valid token is sent', async () => {
+      const token = jwtService.sign({ sub: 'owner-1', email: 'o@example.com' });
+      const request: Record<string, unknown> = {
+        headers: { authorization: `Bearer ${token}` },
+      };
+
+      await expect(guard.canActivate(makeContext(request))).resolves.toBe(true);
+      expect((request.user as Record<string, unknown>)?.sub).toBe('owner-1');
+    });
+
+    it('allows the request as anonymous when the token is invalid', async () => {
+      const request: Record<string, unknown> = {
+        headers: { authorization: 'Bearer not-a-valid-jwt' },
+      };
+
+      await expect(guard.canActivate(makeContext(request))).resolves.toBe(true);
+      expect(request.user).toBeUndefined();
+    });
+
+    it('allows the request as anonymous when the token is expired', async () => {
+      const expired = jwtService.sign(
+        { sub: 'owner-1', email: 'o@example.com' },
+        { expiresIn: -60 },
+      );
+      const request: Record<string, unknown> = {
+        headers: { authorization: `Bearer ${expired}` },
+      };
+
+      await expect(guard.canActivate(makeContext(request))).resolves.toBe(true);
+      expect(request.user).toBeUndefined();
+    });
+
+    it('ignores non-Bearer authorization schemes', async () => {
+      const request: Record<string, unknown> = {
+        headers: { authorization: 'Basic dXNlcjpwYXNz' },
+      };
+
+      await expect(guard.canActivate(makeContext(request))).resolves.toBe(true);
+      expect(request.user).toBeUndefined();
+    });
+  });
+
   it('passes with a valid JWT and attaches payload to request.user', async () => {
     const token = jwtService.sign({ sub: 'user-1', email: 'a@example.com' });
     const request: Record<string, unknown> = {
