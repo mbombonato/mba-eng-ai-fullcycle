@@ -1,0 +1,25 @@
+"""Regras de domínio centralizadas (antes eram magic numbers/strings espalhados)."""
+
+TASK_STATUS_PENDING = "pending"
+TASK_STATUS_IN_PROGRESS = "in_progress"
+TASK_STATUS_DONE = "done"
+TASK_STATUS_CANCELLED = "cancelled"
+TASK_STATUSES = (TASK_STATUS_PENDING, TASK_STATUS_IN_PROGRESS, TASK_STATUS_DONE, TASK_STATUS_CANCELLED)
+CLOSED_TASK_STATUSES = (TASK_STATUS_DONE, TASK_STATUS_CANCELLED)
+
+MIN_PRIORITY = 1
+MAX_PRIORITY = 5
+DEFAULT_PRIORITY = 3
+HIGH_PRIORITY_THRESHOLD = 2  # prioridades <= 2 contam como alta prioridade
+PRIORITY_LABELS = {1: "critical", 2: "high", 3: "medium", 4: "low", 5: "minimal"}
+
+MIN_TITLE_LENGTH = 3
+MAX_TITLE_LENGTH = 200
+DATE_FORMAT = "%Y-%m-%d"
+
+USER_ROLES = ("user", "admin", "manager")
+DEFAULT_ROLE = "user"
+MIN_PASSWORD_LENGTH = 8
+
+DEFAULT_CATEGORY_COLOR = "#000000"
+RECENT_ACTIVITY_DAYS = 7

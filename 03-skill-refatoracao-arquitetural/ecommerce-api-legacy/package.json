@@ -2,9 +2,9 @@
   "name": "desafio-arquitetura-ia-boilerplate",
   "version": "1.0.0",
   "description": "Boilerplate com código legado para refatoração",
-  "main": "src/app.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node src/app.js"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "express": "^4.18.2",

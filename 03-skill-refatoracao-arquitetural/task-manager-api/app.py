@@ -1,34 +1,67 @@
+"""Entry point e application factory (composition root)."""
+import logging
+
 from flask import Flask
 from flask_cors import CORS
+
+from config.settings import Settings
+from controllers.category_controller import CategoryController
+from controllers.report_controller import ReportController
+from controllers.system_controller import SystemController
+from controllers.task_controller import TaskController
+from controllers.user_controller import UserController
 from database import db
-from routes.task_routes import task_bp
-from routes.user_routes import user_bp
-from routes.report_routes import report_bp
-import os, sys, json, datetime
+from middlewares.error_handler import register_error_handlers
+from routes.category_routes import create_category_blueprint
+from routes.report_routes import create_report_blueprint
+from routes.system_routes import create_system_blueprint
+from routes.task_routes import create_task_blueprint
+from routes.user_routes import create_user_blueprint
+from services.auth_service import AuthService
+from services.category_service import CategoryService
+from services.report_service import ReportService
+from services.task_service import TaskService
+from services.user_service import UserService
 
-app = Flask(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tasks.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'super-secret-key-123'
 
-CORS(app)
-db.init_app(app)
+def create_app(settings=None):
+    settings = settings or Settings.from_env()
 
-app.register_blueprint(task_bp)
-app.register_blueprint(user_bp)
-app.register_blueprint(report_bp)
+    app = Flask(__name__)
+    app.config.update(
+        SQLALCHEMY_DATABASE_URI=settings.database_url,
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        SECRET_KEY=settings.secret_key,
+        DEBUG=settings.debug,
+    )
+    CORS(app, origins=settings.cors_origins)
+    db.init_app(app)
 
-@app.route('/health')
-def health():
-    return {'status': 'ok', 'timestamp': str(datetime.datetime.now())}
+    task_service = TaskService()
+    user_service = UserService()
+    category_service = CategoryService()
+    auth_service = AuthService(settings.secret_key, settings.token_max_age_seconds)
+    report_service = ReportService()
 
-@app.route('/')
-def index():
-    return {'message': 'Task Manager API', 'version': '1.0'}
+    app.register_blueprint(create_system_blueprint(SystemController()))
+    app.register_blueprint(create_task_blueprint(TaskController(task_service)))
+    app.register_blueprint(create_user_blueprint(UserController(user_service, task_service, auth_service)))
+    app.register_blueprint(create_category_blueprint(CategoryController(category_service)))
+    app.register_blueprint(create_report_blueprint(ReportController(report_service, user_service, task_service)))
+    register_error_handlers(app)
 
-with app.app_context():
-    db.create_all()
+    with app.app_context():
+        import models  # noqa: F401 — registra os models antes do create_all
+        db.create_all()
+
+    app.extensions['settings'] = settings
+    return app
+
+
+app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    current = app.extensions['settings']
+    app.run(host=current.host, port=current.port, debug=current.debug)

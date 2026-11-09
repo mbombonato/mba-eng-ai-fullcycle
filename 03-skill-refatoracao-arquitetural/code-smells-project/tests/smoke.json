@@ -1,0 +1,45 @@
+{
+  "base_url": "http://127.0.0.1:5000",
+  "requests": [
+    {"name": "Index", "path": "/", "expect_status": 200, "expect_keys": ["mensagem", "endpoints"]},
+    {"name": "Health sem vazar segredos", "path": "/health", "expect_status": 200, "expect_keys": ["status", "counts.produtos"], "forbid_keys": ["secret_key", "db_path"]},
+
+    {"name": "Lista produtos", "path": "/produtos", "expect_status": 200, "expect_keys": ["dados.0.nome", "sucesso"]},
+    {"name": "Busca por termo", "path": "/produtos/busca?q=Mouse", "expect_status": 200, "expect_keys": ["dados.0.nome", "total"]},
+    {"name": "Busca por filtros", "path": "/produtos/busca?categoria=informatica&preco_min=100&preco_max=500", "expect_status": 200, "expect_keys": ["dados", "total"]},
+    {"name": "Busca produto por id", "path": "/produtos/1", "expect_status": 200, "expect_keys": ["dados.nome"]},
+    {"name": "Produto inexistente", "path": "/produtos/9999", "expect_status": 404},
+    {"name": "Cria produto", "method": "POST", "path": "/produtos", "body": {"nome": "Mousepad XL", "descricao": "Mousepad grande", "preco": 99.9, "estoque": 10, "categoria": "informatica"}, "expect_status": 201, "expect_keys": ["dados.id"], "capture": {"produto_id": "dados.id"}},
+    {"name": "Cria produto com aspas (SQL injection quebrava)", "method": "POST", "path": "/produtos", "body": {"nome": "Copo d'água", "preco": 10, "estoque": 1, "categoria": "geral"}, "expect_status": 201},
+    {"name": "Cria produto sem nome", "method": "POST", "path": "/produtos", "body": {"preco": 10, "estoque": 1}, "expect_status": 400},
+    {"name": "Cria produto com categoria inválida", "method": "POST", "path": "/produtos", "body": {"nome": "X Produto", "preco": 10, "estoque": 1, "categoria": "nada"}, "expect_status": 400},
+    {"name": "Atualiza produto", "method": "PUT", "path": "/produtos/{{produto_id}}", "body": {"nome": "Mousepad XXL", "preco": 120, "estoque": 5, "categoria": "informatica"}, "expect_status": 200},
+    {"name": "Atualiza produto inexistente", "method": "PUT", "path": "/produtos/9999", "body": {"nome": "X", "preco": 1, "estoque": 1}, "expect_status": 404},
+    {"name": "Deleta produto", "method": "DELETE", "path": "/produtos/{{produto_id}}", "expect_status": 200},
+    {"name": "Deleta produto inexistente", "method": "DELETE", "path": "/produtos/9999", "expect_status": 404},
+
+    {"name": "Lista usuários sem senha", "path": "/usuarios", "expect_status": 200, "expect_keys": ["dados.0.email"], "forbid_keys": ["senha"]},
+    {"name": "Busca usuário sem senha", "path": "/usuarios/1", "expect_status": 200, "expect_keys": ["dados.email"], "forbid_keys": ["senha"]},
+    {"name": "Usuário inexistente", "path": "/usuarios/9999", "expect_status": 404},
+    {"name": "Cria usuário", "method": "POST", "path": "/usuarios", "body": {"nome": "Cliente Smoke", "email": "smoke@email.com", "senha": "segredo123"}, "expect_status": 201, "expect_keys": ["dados.id"], "capture": {"usuario_id": "dados.id"}},
+    {"name": "Cria usuário incompleto", "method": "POST", "path": "/usuarios", "body": {"nome": "Sem email"}, "expect_status": 400},
+    {"name": "Login válido", "method": "POST", "path": "/login", "body": {"email": "admin@loja.com", "senha": "admin123"}, "expect_status": 200, "expect_keys": ["dados.email"], "forbid_keys": ["senha"]},
+    {"name": "Login do usuário criado", "method": "POST", "path": "/login", "body": {"email": "smoke@email.com", "senha": "segredo123"}, "expect_status": 200},
+    {"name": "Login com senha errada", "method": "POST", "path": "/login", "body": {"email": "admin@loja.com", "senha": "errada"}, "expect_status": 401},
+    {"name": "Login com SQL injection (bypass no original)", "method": "POST", "path": "/login", "body": {"email": "admin@loja.com' --", "senha": "x"}, "expect_status": 401},
+
+    {"name": "Cria pedido", "method": "POST", "path": "/pedidos", "body": {"usuario_id": "{{usuario_id}}", "itens": [{"produto_id": 1, "quantidade": 1}, {"produto_id": 2, "quantidade": 2}]}, "expect_status": 201, "expect_keys": ["dados.pedido_id", "dados.total"], "capture": {"pedido_id": "dados.pedido_id"}},
+    {"name": "Pedido sem estoque", "method": "POST", "path": "/pedidos", "body": {"usuario_id": 1, "itens": [{"produto_id": 1, "quantidade": 99999}]}, "expect_status": 400},
+    {"name": "Pedido com produto inexistente", "method": "POST", "path": "/pedidos", "body": {"usuario_id": 1, "itens": [{"produto_id": 9999, "quantidade": 1}]}, "expect_status": 400},
+    {"name": "Pedido sem itens", "method": "POST", "path": "/pedidos", "body": {"usuario_id": 1, "itens": []}, "expect_status": 400},
+    {"name": "Lista pedidos", "path": "/pedidos", "expect_status": 200, "expect_keys": ["dados.0.itens.0.produto_nome"]},
+    {"name": "Pedidos do usuário", "path": "/pedidos/usuario/{{usuario_id}}", "expect_status": 200, "expect_keys": ["dados.0.itens.1.quantidade"]},
+    {"name": "Atualiza status do pedido", "method": "PUT", "path": "/pedidos/{{pedido_id}}/status", "body": {"status": "aprovado"}, "expect_status": 200},
+    {"name": "Status inválido", "method": "PUT", "path": "/pedidos/{{pedido_id}}/status", "body": {"status": "voando"}, "expect_status": 400},
+    {"name": "Relatório de vendas", "path": "/relatorios/vendas", "expect_status": 200, "expect_keys": ["dados.faturamento_bruto", "dados.ticket_medio", "dados.pedidos_aprovados"]},
+
+    {"name": "Admin query arbitrária removida", "method": "POST", "path": "/admin/query", "body": {"sql": "SELECT * FROM usuarios"}, "expect_status": [404, 405]},
+    {"name": "Reset do banco sem token é negado", "method": "POST", "path": "/admin/reset-db", "expect_status": [401, 403]},
+    {"name": "Reset do banco com token de admin", "method": "POST", "path": "/admin/reset-db", "headers": {"X-Admin-Token": "{{env:ADMIN_TOKEN}}"}, "expect_status": 200}
+  ]
+}

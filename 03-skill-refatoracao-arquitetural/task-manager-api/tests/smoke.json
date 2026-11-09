@@ -1,0 +1,46 @@
+{
+  "base_url": "http://127.0.0.1:5000",
+  "requests": [
+    {"name": "Index", "path": "/", "expect_status": 200, "expect_keys": ["message", "version"]},
+    {"name": "Health", "path": "/health", "expect_status": 200, "expect_keys": ["status", "timestamp"]},
+
+    {"name": "Lista tasks", "path": "/tasks", "expect_status": 200, "expect_keys": ["0.id", "0.overdue", "0.user_name", "0.category_name", "0.tags"]},
+    {"name": "Busca task por id", "path": "/tasks/1", "expect_status": 200, "expect_keys": ["title", "overdue"]},
+    {"name": "Task inexistente", "path": "/tasks/9999", "expect_status": 404},
+    {"name": "Cria task", "method": "POST", "path": "/tasks", "body": {"title": "Task de smoke test", "description": "criada pelo smoke", "priority": 2, "user_id": 1, "category_id": 1, "due_date": "2030-01-31", "tags": ["smoke", "teste"]}, "expect_status": 201, "expect_keys": ["id", "tags.1"], "capture": {"task_id": "id"}},
+    {"name": "Cria task com título curto", "method": "POST", "path": "/tasks", "body": {"title": "ab"}, "expect_status": 400},
+    {"name": "Cria task com status inválido", "method": "POST", "path": "/tasks", "body": {"title": "Status ruim", "status": "xyz"}, "expect_status": 400},
+    {"name": "Cria task com prioridade não numérica (500 no original)", "method": "POST", "path": "/tasks", "body": {"title": "Prioridade texto", "priority": "alta"}, "expect_status": 400},
+    {"name": "Cria task com usuário inexistente", "method": "POST", "path": "/tasks", "body": {"title": "Sem dono", "user_id": 9999}, "expect_status": 404},
+    {"name": "Cria task com data inválida", "method": "POST", "path": "/tasks", "body": {"title": "Data ruim", "due_date": "31-31-2020"}, "expect_status": 400},
+    {"name": "Atualiza task", "method": "PUT", "path": "/tasks/{{task_id}}", "body": {"status": "in_progress", "priority": 1, "tags": "a,b"}, "expect_status": 200, "expect_keys": ["status"]},
+    {"name": "Atualiza task inexistente", "method": "PUT", "path": "/tasks/9999", "body": {"status": "done"}, "expect_status": 404},
+    {"name": "Busca tasks por texto", "path": "/tasks/search?q=login", "expect_status": 200, "expect_keys": ["0.title"]},
+    {"name": "Busca tasks por filtros", "path": "/tasks/search?status=pending&priority=1&user_id=1", "expect_status": 200, "expect_keys": ["0.id"]},
+    {"name": "Estatísticas de tasks", "path": "/tasks/stats", "expect_status": 200, "expect_keys": ["total", "overdue", "completion_rate"]},
+    {"name": "Deleta task", "method": "DELETE", "path": "/tasks/{{task_id}}", "expect_status": 200},
+
+    {"name": "Lista usuários sem hash de senha", "path": "/users", "expect_status": 200, "expect_keys": ["0.task_count"], "forbid_keys": ["password"]},
+    {"name": "Busca usuário com tasks", "path": "/users/1", "expect_status": 200, "expect_keys": ["email", "tasks.0.id"], "forbid_keys": ["password"]},
+    {"name": "Usuário inexistente", "path": "/users/9999", "expect_status": 404},
+    {"name": "Cria usuário", "method": "POST", "path": "/users", "body": {"name": "Smoke User", "email": "smoke@email.com", "password": "segredo123"}, "expect_status": 201, "expect_keys": ["id"], "forbid_keys": ["password"], "capture": {"user_id": "id"}},
+    {"name": "Cria usuário com email duplicado", "method": "POST", "path": "/users", "body": {"name": "Dup", "email": "smoke@email.com", "password": "segredo123"}, "expect_status": 409},
+    {"name": "Cria usuário com email inválido", "method": "POST", "path": "/users", "body": {"name": "Inv", "email": "invalido", "password": "segredo123"}, "expect_status": 400},
+    {"name": "Atualiza usuário", "method": "PUT", "path": "/users/{{user_id}}", "body": {"name": "Smoke User 2", "role": "manager"}, "expect_status": 200, "forbid_keys": ["password"]},
+    {"name": "Tasks do usuário", "path": "/users/1/tasks", "expect_status": 200, "expect_keys": ["0.overdue"]},
+    {"name": "Login válido", "method": "POST", "path": "/login", "body": {"email": "joao@email.com", "password": "1234"}, "expect_status": 200, "expect_keys": ["token", "user.email"], "forbid_keys": ["password"]},
+    {"name": "Login com senha errada", "method": "POST", "path": "/login", "body": {"email": "joao@email.com", "password": "errada"}, "expect_status": 401},
+    {"name": "Deleta usuário", "method": "DELETE", "path": "/users/{{user_id}}", "expect_status": 200},
+
+    {"name": "Relatório resumo", "path": "/reports/summary", "expect_status": 200, "expect_keys": ["overview.total_tasks", "tasks_by_priority.critical", "overdue.count", "user_productivity.0.completion_rate"]},
+    {"name": "Relatório por usuário", "path": "/reports/user/1", "expect_status": 200, "expect_keys": ["user.name", "statistics.completion_rate"]},
+    {"name": "Relatório de usuário inexistente", "path": "/reports/user/9999", "expect_status": 404},
+
+    {"name": "Lista categorias", "path": "/categories", "expect_status": 200, "expect_keys": ["0.task_count"]},
+    {"name": "Cria categoria", "method": "POST", "path": "/categories", "body": {"name": "Smoke", "color": "#123456"}, "expect_status": 201, "expect_keys": ["id"], "capture": {"cat_id": "id"}},
+    {"name": "Cria categoria sem nome", "method": "POST", "path": "/categories", "body": {"color": "#123456"}, "expect_status": 400},
+    {"name": "Atualiza categoria", "method": "PUT", "path": "/categories/{{cat_id}}", "body": {"description": "nova"}, "expect_status": 200},
+    {"name": "Deleta categoria", "method": "DELETE", "path": "/categories/{{cat_id}}", "expect_status": 200},
+    {"name": "Deleta categoria inexistente", "method": "DELETE", "path": "/categories/9999", "expect_status": 404}
+  ]
+}

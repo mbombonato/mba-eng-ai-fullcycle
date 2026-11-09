@@ -1,0 +1,19 @@
+{
+  "base_url": "http://127.0.0.1:3000",
+  "requests": [
+    {"name": "Checkout - sucesso (novo usuário)", "method": "POST", "path": "/api/checkout", "body": {"usr": "Guilherme", "eml": "gui@fullcycle.com.br", "pwd": "senhaforte", "c_id": 2, "card": "4111222233334444"}, "expect_status": 200, "expect_keys": ["msg", "enrollment_id"]},
+    {"name": "Checkout - sucesso (usuário existente)", "method": "POST", "path": "/api/checkout", "body": {"usr": "Leonan", "eml": "leonan@fullcycle.com.br", "c_id": 2, "card": "4000000000000002"}, "expect_status": 200, "expect_keys": ["msg", "enrollment_id"]},
+    {"name": "Checkout - pagamento recusado", "method": "POST", "path": "/api/checkout", "body": {"usr": "João", "eml": "joao@teste.com", "pwd": "123", "c_id": 1, "card": "5111222233334444"}, "expect_status": 400},
+    {"name": "Checkout - campos obrigatórios ausentes", "method": "POST", "path": "/api/checkout", "body": {"usr": "Sem curso"}, "expect_status": 400},
+    {"name": "Checkout - curso inexistente", "method": "POST", "path": "/api/checkout", "body": {"usr": "Ana", "eml": "ana@teste.com", "pwd": "x", "c_id": 999, "card": "4111222233334444"}, "expect_status": 404},
+    {"name": "Checkout - novo usuário sem senha (default 123456 no original)", "method": "POST", "path": "/api/checkout", "body": {"usr": "Sem Senha", "eml": "semsenha@teste.com", "c_id": 1, "card": "4111222233334444"}, "expect_status": 400},
+
+    {"name": "Relatório financeiro sem token é negado", "path": "/api/admin/financial-report", "expect_status": [401, 403]},
+    {"name": "Relatório financeiro", "path": "/api/admin/financial-report", "headers": {"X-Admin-Token": "{{env:ADMIN_TOKEN}}"}, "expect_status": 200, "expect_keys": ["0.course", "0.revenue", "0.students.0.student", "0.students.0.paid", "1.students.1.paid"]},
+
+    {"name": "Deletar usuário sem token é negado", "method": "DELETE", "path": "/api/users/1", "expect_status": [401, 403]},
+    {"name": "Deletar usuário", "method": "DELETE", "path": "/api/users/1", "headers": {"X-Admin-Token": "{{env:ADMIN_TOKEN}}"}, "expect_status": 200},
+    {"name": "Deletar usuário inexistente", "method": "DELETE", "path": "/api/users/999", "headers": {"X-Admin-Token": "{{env:ADMIN_TOKEN}}"}, "expect_status": 404},
+    {"name": "Relatório sem registros órfãos após delete", "path": "/api/admin/financial-report", "headers": {"X-Admin-Token": "{{env:ADMIN_TOKEN}}"}, "expect_status": 200, "expect_keys": ["0.course"]}
+  ]
+}
