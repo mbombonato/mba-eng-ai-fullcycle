@@ -10,21 +10,32 @@ More info in the project overview: [docs/project-plan.md](docs/project-plan.md)
 
 This is a monorepo with two main areas:
 
-- `nestjs-project/` — Backend API (NestJS 11, TypeScript, Express). Contains modules for users, channels, videos, comments, etc.
+- `nestjs-project/` — Backend API (NestJS 11, TypeScript, Express). Modules: `auth`, `users`, `channels`, `mail`, `storage`, `queue`, `videos` (+ `videos/processing` for the worker), `common`, `config`, `database`, `swagger`. Also hosts the video worker entrypoint (`src/worker.ts`).
 - `docs/` — Project documentation, architecture diagrams, and planning.
-- `next-frontend/` (Next.js) — not yet initialized
+- `next-frontend/` (Next.js) — frontend for Phases 01–02 (auth); the video UI is not part of Phase 03
 
 ## Architecture (C4 Container Diagram)
 
 See `docs/diagrams/software-arch.mermaid` for the full diagram. Key containers:
 
 - **Frontend** (Next.js) → calls API via REST, streams from Object Storage
-- **API** (Nest.js) → business rules, auth, reads/writes DB, uploads to storage, publishes jobs to queue, sends emails
-- **Video Worker** (FFmpeg) → consumes jobs from queue, processes videos, updates DB and storage
+- **API** (Nest.js) → business rules, auth, reads/writes DB, issues presigned upload/download URLs for the storage, publishes jobs to queue, sends emails
+- **Video Worker** (Nest.js application context + FFmpeg) → consumes jobs from queue, extracts duration/metadata and the thumbnail, updates DB and storage
 - **Database** (PostgreSQL) → users, channels, videos, comments, likes
-- **Object Storage** (S3/MinIO) → video files and thumbnails
-- **Message Queue** (TBD) → video processing job queue
+- **Object Storage** (S3-compatible; MinIO locally) → video files and thumbnails
+- **Message Queue** (BullMQ on Redis) → video processing job queue (`video-processing`)
 - **Email Service** (SMTP) → account confirmation and password recovery
+
+## Videos (Phase 03)
+
+Plan and progress: `docs/phases/phase-03-videos/`. Decisions: `docs/decisions/technical-decisions-phase-03-videos.md`. Backend details (modules, endpoints, env vars, tests): `nestjs-project/CLAUDE.md` → "Videos, Storage, Queue and Worker".
+
+- **Upload (up to 10 GB) never goes through the API:** `POST /videos` pre-registers the video as `draft` and returns presigned S3 multipart part URLs; the client `PUT`s the parts straight to the storage and calls `POST /videos/:slug/upload/complete`, which checks the real size, sets `processing` and enqueues `process-video` on the BullMQ queue `video-processing`.
+- **Worker** (`worker` Compose service, `src/worker.ts`): `ffprobe` (duration + metadata) and `ffmpeg` (JPEG thumbnail), then `ready`; invalid files end `failed` with a reason, transient errors are retried by BullMQ.
+- **Unique URL:** random 11-char base64url `slug` with a unique index (`/videos/:slug`).
+- **Streaming / download:** `GET /videos/:slug/stream` and `/download` answer `302` to short-lived presigned URLs; the storage serves `Range` requests with `206 Partial Content`; download carries `Content-Disposition: attachment`.
+- **Status lifecycle:** `draft → processing → ready | failed`. Non-ready videos are visible only to their owner (optional JWT on `@Public()` routes).
+- **Compose services added:** `minio` + `minio-init` (bucket), `redis`, `worker`.
 
 ## Docker Networking
 
