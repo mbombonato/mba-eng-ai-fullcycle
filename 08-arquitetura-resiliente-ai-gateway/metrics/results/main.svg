@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="520" font-family="sans-serif" font-size="11">
+<rect width="100%" height="100%" fill="white"/>
+<text x="70" y="28" font-size="15" font-weight="bold">Main Sequence: main</text>
+<polygon points="70,450 260.0,450 70,260.0" fill="#f8d7da"/>
+<text x="76" y="336.0" fill="#a33">zona de dor</text>
+<polygon points="450,70 260.0,70 450,260.0" fill="#fff3cd"/>
+<text x="343.59999999999997" y="84" fill="#963">zona de inutilidade</text>
+<rect x="70" y="70" width="380" height="380" fill="none" stroke="#333"/>
+<line x1="70" y1="70" x2="450" y2="450" stroke="#2a6" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="279.0" y="254.0" fill="#2a6" transform="rotate(45 279.0 254.0)">Main Sequence (A + I = 1)</text>
+<text x="70" y="466" text-anchor="middle">0</text>
+<text x="62" y="454" text-anchor="end">0</text>
+<text x="165.0" y="466" text-anchor="middle">0.25</text>
+<text x="62" y="359.0" text-anchor="end">0.25</text>
+<text x="260.0" y="466" text-anchor="middle">0.5</text>
+<text x="62" y="264.0" text-anchor="end">0.5</text>
+<text x="355.0" y="466" text-anchor="middle">0.75</text>
+<text x="62" y="169.0" text-anchor="end">0.75</text>
+<text x="450" y="466" text-anchor="middle">1</text>
+<text x="62" y="74" text-anchor="end">1</text>
+<text x="260.0" y="495" text-anchor="middle">Instabilidade (I)</text>
+<text x="22" y="260.0" text-anchor="middle" transform="rotate(-90 22 260.0)">Abstração (A)</text>
+<circle cx="70.0" cy="450.0" r="5" fill="#c0392b"/>
+<text x="77.0" y="442.0" fill="#c0392b">config, errors, schemas</text>
+<circle cx="70.0" cy="70.0" r="5" fill="#1f5fa8"/>
+<text x="77.0" y="48.0" fill="#1f5fa8">ports</text>
+<circle cx="260.0" cy="450.0" r="5" fill="#1f5fa8"/>
+<text x="267.0" y="414.0" fill="#1f5fa8">tickets</text>
+<circle cx="324.6" cy="450.0" r="5" fill="#1f5fa8"/>
+<text x="331.6" y="400.0" fill="#1f5fa8">adapters.gateway, jobs, suggestion</text>
+<circle cx="355.0" cy="450.0" r="5" fill="#1f5fa8"/>
+<text x="362.0" y="442.0" fill="#1f5fa8">classification, extraction, report</text>
+<circle cx="450.0" cy="450.0" r="5" fill="#1f5fa8"/>
+<text x="457.0" y="428.0" fill="#1f5fa8">main</text>
+<text x="530" y="60" font-weight="bold">componente  I  A  D</text>
+<text x="530" y="78" fill="#222">adapters.gateway  0.67  0.00  0.33</text>
+<text x="530" y="93" fill="#222">classification  0.75  0.00  0.25</text>
+<text x="530" y="108" fill="#c0392b">config  0.00  0.00  1.00</text>
+<text x="530" y="123" fill="#c0392b">errors  0.00  0.00  1.00</text>
+<text x="530" y="138" fill="#222">extraction  0.75  0.00  0.25</text>
+<text x="530" y="153" fill="#222">jobs  0.67  0.00  0.33</text>
+<text x="530" y="168" fill="#222">main  1.00  0.00  0.00</text>
+<text x="530" y="183" fill="#222">ports  0.00  1.00  0.00</text>
+<text x="530" y="198" fill="#222">report  0.75  0.00  0.25</text>
+<text x="530" y="213" fill="#c0392b">schemas  0.00  0.00  1.00</text>
+<text x="530" y="228" fill="#222">suggestion  0.67  0.00  0.33</text>
+<text x="530" y="243" fill="#222">tickets  0.50  0.00  0.50</text>
+</svg>

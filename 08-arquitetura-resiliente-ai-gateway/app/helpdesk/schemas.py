@@ -41,3 +41,9 @@ class TopicsReport(BaseModel):
     end: date
     total_tickets: int
     topics: list[Topic]
+
+
+class ReportStatus(BaseModel):
+    state: str  # pending | running | done | failed
+    progress: str | None = None
+    reason: str | None = None

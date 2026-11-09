@@ -1,9 +1,11 @@
+from collections.abc import Iterator
+
 from .ports import TextModel
-from .schemas import ReplySuggestion, TicketInput
+from .schemas import TicketInput
 
 CAPABILITY = "reply-suggestion"
 
 
-def suggest(ticket: TicketInput, model: TextModel) -> ReplySuggestion:
-    text = model.complete(CAPABILITY, "suggest", ticket.text)
-    return ReplySuggestion(ticket_id=ticket.ticket_id, suggestion=text)
+def suggest(ticket: TicketInput, model: TextModel) -> Iterator[str]:
+    """Trechos da sugestão de resposta, na ordem em que o modelo os gera."""
+    return model.stream(CAPABILITY, "suggest", ticket.text)
