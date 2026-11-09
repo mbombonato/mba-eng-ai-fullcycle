@@ -10,6 +10,11 @@ import { BEARER_PREFIX } from '../auth.constants';
 import { JwtPayload } from '../auth.types';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
+type GuardedRequest = {
+  headers: Record<string, string>;
+  user?: JwtPayload;
+};
+
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
@@ -22,25 +27,45 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
+    const request = context.switchToHttp().getRequest<GuardedRequest>();
+    const token = this.extractBearerToken(request);
 
-    const request = context
-      .switchToHttp()
-      .getRequest<{ headers: Record<string, string>; user: unknown }>();
-    const authHeader = request.headers?.authorization;
+    if (isPublic) {
+      // Optional authentication: public routes never reject, but a valid
+      // token identifies the caller (e.g. the owner of a non-ready video).
+      if (token) {
+        request.user = await this.verifyOrUndefined(token);
+      }
+      return true;
+    }
 
-    if (!authHeader || !authHeader.startsWith(BEARER_PREFIX)) {
+    if (!token) {
       throw new UnauthorizedException();
     }
 
-    const token = authHeader.slice(BEARER_PREFIX.length);
-
-    try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
-      request.user = payload;
-      return true;
-    } catch {
+    const payload = await this.verifyOrUndefined(token);
+    if (!payload) {
       throw new UnauthorizedException();
+    }
+    request.user = payload;
+    return true;
+  }
+
+  private extractBearerToken(request: GuardedRequest): string | undefined {
+    const authHeader = request.headers?.authorization;
+    if (!authHeader || !authHeader.startsWith(BEARER_PREFIX)) {
+      return undefined;
+    }
+    return authHeader.slice(BEARER_PREFIX.length);
+  }
+
+  private async verifyOrUndefined(
+    token: string,
+  ): Promise<JwtPayload | undefined> {
+    try {
+      return await this.jwtService.verifyAsync<JwtPayload>(token);
+    } catch {
+      return undefined;
     }
   }
 }

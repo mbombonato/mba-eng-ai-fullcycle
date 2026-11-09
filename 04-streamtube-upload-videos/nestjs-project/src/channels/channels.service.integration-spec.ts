@@ -1,5 +1,6 @@
 import { DataSource, Repository } from 'typeorm';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
+import { Video } from '../videos/entities/video.entity';
 import { VerificationToken } from '../auth/entities/verification-token.entity';
 import {
   cleanAllTables,
@@ -9,7 +10,7 @@ import { User } from '../users/entities/user.entity';
 import { ChannelsService } from './channels.service';
 import { Channel } from './entities/channel.entity';
 
-const ALL_ENTITIES = [User, Channel, RefreshToken, VerificationToken];
+const ALL_ENTITIES = [User, Channel, RefreshToken, VerificationToken, Video];
 
 describe('ChannelsService (integration)', () => {
   let dataSource: DataSource;
@@ -87,6 +88,26 @@ describe('ChannelsService (integration)', () => {
 
       const channels = await channelRepository.find();
       expect(channels).toHaveLength(2);
+    });
+  });
+
+  describe('findByUserId', () => {
+    it('returns the channel owned by the user', async () => {
+      const user = await createUser();
+      const created = await channelsService.createChannel(
+        user.id,
+        'owner@example.com',
+      );
+
+      const found = await channelsService.findByUserId(user.id);
+
+      expect(found?.id).toBe(created.id);
+    });
+
+    it('returns null when the user has no channel', async () => {
+      const user = await createUser();
+
+      expect(await channelsService.findByUserId(user.id)).toBeNull();
     });
   });
 });
