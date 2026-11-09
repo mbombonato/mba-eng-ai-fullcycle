@@ -1,155 +1,151 @@
 # Ingestão e Busca Semântica com LangChain e Postgres
 
-## Objetivo
+Desafio do módulo **Introdução ao LangChain** (MBA Engenharia de Software com IA — Full Cycle).
 
-Você deve entregar um software capaz de:
+Este software:
 
-- Ingestão: Ler um arquivo PDF e salvar suas informações em um banco de dados PostgreSQL com extensão pgVector.
-- Busca: Permitir que o usuário faça perguntas via linha de comando (CLI) e receba respostas baseadas apenas no conteúdo do PDF.
+- **Ingestão** (`src/ingest.py`): lê o `document.pdf`, divide o texto em chunks de **1000 caracteres com overlap de 150**, gera o embedding de cada chunk e grava os vetores no **PostgreSQL + pgVector** (via `langchain_postgres.PGVector`).
+- **Busca** (`src/search.py`): vetoriza a pergunta, busca os **10 chunks mais relevantes** (`similarity_search_with_score(query, k=10)`), monta o prompt definido no enunciado e chama a LLM.
+- **Chat** (`src/chat.py`): CLI que recebe perguntas no terminal e responde **apenas** com base no conteúdo do PDF.
 
-## Exemplo no CLI
+## Tecnologias
 
-Faça sua pergunta:
+- Python 3.11+ (testado com Python 3.14)
+- LangChain (`langchain-openai`, `langchain-google-genai`, `langchain-postgres`, `langchain-text-splitters`, `langchain-community`)
+- PostgreSQL 17 + pgVector (Docker Compose)
+- Provedor de modelos: **OpenAI** (padrão) ou **Gemini**
 
-```
-PERGUNTA: Qual o faturamento da Empresa SuperTechIABrazil?
-RESPOSTA: O faturamento foi de 10 milhões de reais.
+## Modelos utilizados
 
----
+O desafio não fixa modelos. Os padrões são os modelos leves/baratos disponíveis atualmente, e todos podem ser trocados no `.env`:
 
-Perguntas fora do contexto:
+| Provedor | Embeddings | LLM |
+|---|---|---|
+| OpenAI (`LLM_PROVIDER=openai`) | `text-embedding-3-small` (1536 dimensões) | `gpt-5.4-nano` |
+| Gemini (`LLM_PROVIDER=gemini`) | `models/gemini-embedding-001` (3072 dimensões) | `gemini-3.5-flash-lite` |
 
-PERGUNTA: Quantos clientes temos em 2024?
-RESPOSTA: Não tenho informações necessárias para responder sua pergunta.
-```
+> **Atenção à dimensão dos vetores:** a tabela é criada na primeira ingestão com a dimensão do modelo de embeddings escolhido. Se trocar de modelo/provedor de embeddings, apague o volume do banco (`docker compose down -v`) ou use outro `PG_VECTOR_COLLECTION_NAME`, e refaça a ingestão.
 
-## Tecnologias obrigatórias
-
-- Linguagem: Python
-- Framework: LangChain
-- Banco de dados: PostgreSQL + pgVector
-- Execução do banco de dados: Docker & Docker Compose (docker-compose fornecido no repositório de exemplo)
-
-## Pacotes recomendados
-
-- Split: `from langchain_text_splitters import RecursiveCharacterTextSplitter`
-- Embeddings (OpenAI): `from langchain_openai import OpenAIEmbeddings`
-- Embeddings (Gemini): `from langchain_google_genai import GoogleGenerativeAIEmbeddings`
-- PDF: `from langchain_community.document_loaders import PyPDFLoader`
-- Ingestão: `from langchain_postgres import PGVector`
-- Busca: `similarity_search_with_score(query, k=10)`
-
-## OpenAI
-
-- Crie uma API Key da OpenAI.
-- Você vai precisar de um modelo de embeddings e de um modelo de LLM para responder. Consulte a documentação oficial da OpenAI para ver os modelos disponíveis.
-
-## Gemini
-
-- Crie uma API Key da Google.
-- Você vai precisar de um modelo de embeddings e de um modelo de LLM para responder. Consulte a documentação oficial do Google para ver os modelos disponíveis.
-
-Os limites de requisições gratuitas dos modelos podem mudar com frequência. Para informações atualizadas, consulte a documentação oficial do Google.
-
-## Escolha dos modelos
-
-Este desafio não fixa modelos. Nomes e versões mudam com frequência e alguns são descontinuados, então faz parte do desafio consultar a documentação oficial do provedor que você escolher, ver quais modelos estão disponíveis no momento e selecionar os que atendem ao objetivo. Para o volume deste desafio, os modelos mais leves e baratos de cada provedor são suficientes.
-
-Atenção: modelos de embedding diferentes geram vetores com dimensões diferentes. A tabela de vetores é criada na primeira ingestão, já com a dimensão do modelo que você escolheu. Se você trocar de modelo de embeddings depois disso, a ingestão passa a falhar por incompatibilidade de dimensão. Nesse caso é responsabilidade sua apagar a collection existente (ou o volume do banco) e refazer a ingestão do zero com o novo modelo.
-
-## Requisitos
-
-### 1. Ingestão do PDF
-
-- O PDF deve ser dividido em chunks de 1000 caracteres com overlap de 150.
-- Cada chunk deve ser convertido em embedding.
-- Os vetores devem ser armazenados no banco de dados PostgreSQL com pgVector.
-
-### 2. Consulta via CLI
-
-Criar um script Python para simular um chat no terminal.
-
-Passos ao receber uma pergunta:
-
-- Vetorizar a pergunta.
-- Buscar os 10 resultados mais relevantes (k=10) no banco vetorial.
-- Montar o prompt e chamar a LLM.
-- Retornar a resposta ao usuário.
-
-Prompt a ser utilizado:
+## Estrutura
 
 ```
-CONTEXTO:
-{resultados concatenados do banco de dados}
-
-REGRAS:
-- Responda somente com base no CONTEXTO.
-- Se a informação não estiver explicitamente no CONTEXTO, responda:
-  "Não tenho informações necessárias para responder sua pergunta."
-- Nunca invente ou use conhecimento externo.
-- Nunca produza opiniões ou interpretações além do que está escrito.
-
-EXEMPLOS DE PERGUNTAS FORA DO CONTEXTO:
-Pergunta: "Qual é a capital da França?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-Pergunta: "Quantos clientes temos em 2024?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-Pergunta: "Você acha isso bom ou ruim?"
-Resposta: "Não tenho informações necessárias para responder sua pergunta."
-
-PERGUNTA DO USUÁRIO:
-{pergunta do usuário}
-
-RESPONDA A "PERGUNTA DO USUÁRIO"
-```
-
-## Estrutura obrigatória do projeto
-
-Faça um fork do repositório para utilizar a estrutura abaixo: https://github.com/devfullcycle/mba-ia-desafio-ingestao-busca
-
-```
-├── docker-compose.yml
+├── docker-compose.yml    # Postgres + pgVector
 ├── requirements.txt      # Dependências
 ├── .env.example          # Template das variáveis de ambiente
 ├── src/
 │   ├── ingest.py         # Script de ingestão do PDF
-│   ├── search.py         # Script de busca
-│   ├── chat.py           # CLI para interação com usuário
+│   ├── search.py         # Busca vetorial + prompt + LLM
+│   ├── chat.py           # CLI para interação com o usuário
+├── tests/test_rag.py     # Testes (sem chave de API: embeddings/LLM fake)
 ├── document.pdf          # PDF para ingestão
-└── README.md             # Instruções de execução
+└── README.md
 ```
 
-## VirtualEnv para Python
+## Pré-requisitos
 
-Crie e ative um ambiente virtual antes de instalar dependências:
+- Python 3.11 ou superior
+- Docker e Docker Compose
+- Uma API Key da **OpenAI** (https://platform.openai.com/api-keys) **ou** da **Google** (https://aistudio.google.com/apikey)
 
-```
-python3 -m venv venv
-source venv/bin/activate
-```
+## Configuração
+
+1. Crie e ative o ambiente virtual e instale as dependências:
+
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. Crie o arquivo `.env` a partir do template e preencha a sua chave:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   | Variável | Descrição | Padrão |
+   |---|---|---|
+   | `LLM_PROVIDER` | `openai` ou `gemini` | `openai` |
+   | `OPENAI_API_KEY` | Chave da OpenAI (obrigatória se `openai`) | — |
+   | `OPENAI_EMBEDDING_MODEL` / `OPENAI_LLM_MODEL` | Modelos da OpenAI | `text-embedding-3-small` / `gpt-5.4-nano` |
+   | `GOOGLE_API_KEY` | Chave da Google (obrigatória se `gemini`) | — |
+   | `GOOGLE_EMBEDDING_MODEL` / `GOOGLE_LLM_MODEL` | Modelos do Gemini | `models/gemini-embedding-001` / `gemini-3.5-flash-lite` |
+   | `POSTGRES_PORT` | Porta do host usada pelo docker-compose | `5432` |
+   | `DATABASE_URL` | Conexão SQLAlchemy/psycopg com o banco | `postgresql+psycopg://postgres:postgres@localhost:5432/rag` |
+   | `PG_VECTOR_COLLECTION_NAME` | Nome da collection no PGVector | `document_chunks` |
+   | `PDF_PATH` | Caminho do PDF (relativo à raiz do projeto) | `document.pdf` |
+
+   > Se a porta 5432 já estiver em uso na sua máquina, defina por exemplo `POSTGRES_PORT=55432` e ajuste a porta em `DATABASE_URL` para `55432`.
 
 ## Ordem de execução
 
 1. Subir o banco de dados:
 
-```
-docker compose up -d
-```
+   ```bash
+   docker compose up -d
+   ```
 
-2. Executar ingestão do PDF:
+   O serviço `bootstrap_vector_ext` cria a extensão `vector` assim que o Postgres fica saudável.
 
-```
-python src/ingest.py
-```
+2. Executar a ingestão do PDF:
+
+   ```bash
+   python src/ingest.py
+   ```
+
+   Saída esperada:
+
+   ```
+   PDF 'document.pdf' dividido em 67 chunks (chunk_size=1000, overlap=150).
+     67/67 chunks gravados
+   Ingestão concluída com sucesso.
+   ```
+
+   A collection é recriada a cada execução, então rodar a ingestão de novo não duplica os dados.
 
 3. Rodar o chat:
 
+   ```bash
+   python src/chat.py
+   ```
+
+   Digite `sair` (ou `Ctrl+C`) para encerrar.
+
+## Exemplo de uso
+
 ```
-python src/chat.py
+Chat iniciado. Digite 'sair' (ou Ctrl+C) para encerrar.
+Faça sua pergunta:
+
+PERGUNTA: Qual o faturamento da Empresa SuperTechIABrazil?
+RESPOSTA: O faturamento foi de 10 milhões de reais.
+
+---
+
+PERGUNTA: Quantos clientes temos em 2024?
+RESPOSTA: Não tenho informações necessárias para responder sua pergunta.
+
+---
+
+PERGUNTA: sair
+Até logo!
 ```
 
-## Entregável
+## Testes
 
-Repositório público no GitHub contendo todo o código-fonte e README com instruções claras de execução do projeto.
+Os testes não precisam de chave de API: usam embeddings determinísticos e uma LLM fake. Eles conferem o split (1000/150), o prompt, o uso de `k=10` e o fluxo completo de ingestão e busca no pgVector. Os testes de integração são pulados quando o banco não está acessível.
+
+```bash
+docker compose up -d
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rag \
+  python -m unittest discover -s tests -v
+```
+
+Os testes usam a collection `test_document_chunks` e a removem ao final.
+
+## Encerrando
+
+```bash
+docker compose down        # para os containers
+docker compose down -v     # para e apaga o volume (remove os vetores ingeridos)
+```
