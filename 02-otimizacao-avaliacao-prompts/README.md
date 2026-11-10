@@ -137,7 +137,7 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 ### Evidências no LangSmith
 
-- **Link público do dataset de avaliação (com experimentos):** `TODO: colar URL gerada por Client().share_dataset(...)`
+- **Link público do dataset de avaliação (com experimentos):** https://smith.langchain.com/public/878d617f-58e6-4e14-ad19-d18fae635d70/d
 - **Prompt público no Hub:** https://smith.langchain.com/hub/mbombonato/bug_to_user_story_v2
 - **Experimento aprovado:** `mbombonato-bug_to_user_story_v2-f0ee0c98` (15 runs com tracing completo de
   entrada, prompt e saída, e as 5 notas gravadas como feedback em cada run)
