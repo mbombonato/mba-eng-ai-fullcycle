@@ -1,3 +1,22 @@
+# Helpdesk com IA: estado na tag `v1-coupled`
+
+Esta tag marca a aplicação como foi recebida do repositório base (`app/` sem alteração), mais a suíte de caracterização em `tests/characterization/`. A versão final e a documentação completa estão na branch `main`.
+
+Como rodar a suíte nesta tag (Docker com Compose v2 e Python 3.12):
+
+```
+cp .env.example .env
+docker compose up -d --build --wait
+python3 -m venv .venv && .venv/bin/pip install -r tests/requirements.txt
+.venv/bin/pytest tests/characterization
+```
+
+São 17 testes, que fixam o corpo das respostas das 4 features pela API HTTP.
+
+O restante deste arquivo é o enunciado do repositório base, mantido como veio.
+
+---
+
 # Da integração frágil à arquitetura resiliente: IA em produção num helpdesk
 
 ## Descrição
