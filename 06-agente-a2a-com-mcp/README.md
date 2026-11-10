@@ -24,8 +24,8 @@ O validador roda com o `python3` do sistema (3.10+), sem dependências.
 **1. Clonar e gerar a chave de integridade do `requestState`** (uma vez):
 
 ```bash
-git clone <url-do-seu-fork> desafio-a2a-com-mcp
-cd desafio-a2a-com-mcp
+git clone https://github.com/mbombonato/mba-eng-ai-fullcycle.git
+cd mba-eng-ai-fullcycle/06-agente-a2a-com-mcp
 echo "REQUEST_STATE_SECRET=$(python3 -c 'import secrets; print(secrets.token_hex(32))')" > .env
 ```
 
@@ -58,7 +58,7 @@ As reservas ficam em memória. Para rodar o validador de novo, ou para seguir os
 "Fluxo do avaliador" depois dele, reinicie os dois processos (Ctrl+C e o mesmo comando), porque as reservas
 que o validador cria mudam as alternativas oferecidas.
 
-**Alternativa sem uv** (um venv por processo):
+**Alternativa sem uv** (um venv por processo; cada linha em um terminal próprio, a partir da pasta do desafio, com `REQUEST_STATE_SECRET` no `.env` ou exportada):
 
 ```bash
 cd servidor-mcp && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python servidor.py
@@ -89,26 +89,19 @@ No stderr do servidor MCP, cada request aparece como
 `recebido metodo=<método> id=<id> [alvo=<tool ou uri>] [retry=sim] traceparent=<valor>` seguido de `respondido http=<status>`.
 Para o passo 5, procure o trace-id que o validador imprime na primeira linha: ele aparece no `tools/list`, no
 `resources/read` e no `tools/call` do agente. Para o passo 6, o retry aparece com `retry=sim` e um id maior que o do
-`tools/call` inicial da mesma Task (o agente nunca repete id).
+`tools/call` inicial da mesma Task (o contador de ids do agente só cresce enquanto o processo está no ar).
 
 ---
 
 ## Onde a ponte acontece
 
-Tudo está em [`agente/agente.py`](agente/agente.py). A ida é `concluir()` (linha ~210), que recebe o resultado cru do
-`tools/call` (o cliente MCP do agente, [`agente/cliente_mcp.py`](agente/cliente_mcp.py), devolve `InputRequiredResult` sem
-tentar resolvê-lo) e, quando o `resultType` é `input_required`, chama `pausar_task()` (linha ~143). É ali que o
-`input_required` do MCP vira `TASK_STATE_INPUT_REQUIRED`: a função lê a única entrada de `inputRequests`, pega o `enum`
-(ou `const`) da propriedade do `requestedSchema`, guarda numa `PausaMcp` ([`agente/tarefas.py`](agente/tarefas.py)) a
-chave da entrada, o nome da tool, os argumentos originais e o `requestState` intocado, e transita a Task com a mensagem
-`alternativas: <ids na ordem do enum>`. A volta é `retomar_task()` (linha ~183), chamada pelo `SendMessage` de
-continuação (`send_message()`, com `taskId` e `escolha=<valor>`) depois de conferir que a escolha está no `enum`
-(senão a Task continua pausada e repete as alternativas). Ela monta `inputResponses` com a mesma chave
-(`accept` + `{"sala": <escolha>}` ou `decline` para `escolha=recusar`), põe a Task em `WORKING` e repete o `tools/call`
-original pelo `ClienteMcp.chamar_tool()`, que sempre sai com um id JSON-RPC novo (contador monotônico em
-`cliente_mcp.py`) e leva o `requestState` ecoado byte a byte. O resultado volta para `concluir()`, que fecha a Task em
-`COMPLETED` (com o artifact `reserva`), `CANCELED` (recusa) ou `FAILED` (erro de execução da tool, com a mensagem exata no
-histórico), ou pausa de novo se o servidor fizer outra pergunta.
+A ponte está em [`agente/agente.py`](agente/agente.py). **Ida:** `concluir()` recebe o resultado cru do `tools/call` e,
+quando o `resultType` é `input_required`, chama `pausar_task()`, que guarda numa `PausaMcp`
+([`agente/tarefas.py`](agente/tarefas.py)) a chave do `inputRequests`, os argumentos originais e o `requestState`, e põe a
+Task em `TASK_STATE_INPUT_REQUIRED` com a linha `alternativas: <ids na ordem do enum>`. **Volta:** `retomar_task()`,
+chamada pelo `SendMessage` de continuação, repete o `tools/call` original via `ClienteMcp.chamar_tool()`
+([`agente/cliente_mcp.py`](agente/cliente_mcp.py)) com id JSON-RPC novo, `inputResponses` na mesma chave e o
+`requestState` ecoado sem alteração; o resultado volta para `concluir()`, que fecha a Task ou pausa de novo.
 
 Do lado do servidor, a pergunta nasce em `pedir_escolha()` e o retry é tratado no próprio `reservar_sala()`
 ([`servidor-mcp/servidor.py`](servidor-mcp/servidor.py)).
@@ -131,11 +124,10 @@ precisa ter no mínimo 32 bytes (64 caracteres hex) e não existe valor padrão 
 
 **Nada guardado no servidor entre as rodadas.** O servidor não lembra de nada entre o `input_required` e o retry: o pedido
 original e as alternativas oferecidas viajam no `requestState`. Por isso um retry apresentado depois de reiniciar o
-servidor MCP funciona (testado no passo 12 do fluxo do avaliador). Optei pelo fluxo explícito (a tool devolve
+servidor MCP funciona (é o cenário do passo 12 do fluxo do avaliador). Optei pelo fluxo explícito (a tool devolve
 `InputRequiredResult` e lê `ctx.request_state`/`ctx.input_responses`) em vez do padrão `Resolve(...)`/`Elicit` do SDK,
-porque o `Resolve` recalcula a pergunta a cada rodada e só aceita a resposta se o `enum` for idêntico. Depois de um
-restart as reservas em memória voltam ao seed, o `enum` pode mudar, e o retry seria perguntado de novo em vez de
-concluir. Se a sala escolhida tiver sido ocupada entre as rodadas, o servidor faz uma pergunta nova com as alternativas
+para que as alternativas oferecidas viajem seladas no `requestState` e o retry não dependa do estado em memória
+depois de um restart. Se a sala escolhida tiver sido ocupada entre as rodadas, o servidor faz uma pergunta nova com as alternativas
 atuais.
 
 **Capability e `-32021`.** O servidor só pergunta para quem declarou elicitation em form mode no `_meta` daquele
@@ -146,9 +138,9 @@ anterior (modo `stateless_http=True`).
 
 **Estado das Tasks.** Em memória no processo do agente (`RepositorioDeTasks` em `agente/tarefas.py`), um dicionário
 `task_id -> Task`. A Task pública (id, contextId, status, history, artifacts) e a pausa MCP (`PausaMcp`, que contém o
-`requestState`) são objetos separados, e só a primeira é serializada para o wire. Assim o `requestState` nunca aparece em
-card, artifact, mensagem ou `GetTask`. Cada Task tem a sua pausa e um `asyncio.Lock`, então duas Tasks pausadas ao mesmo
-tempo nunca trocam de `requestState`, e duas continuações simultâneas da mesma Task não disparam dois retries. Estado
+`requestState`) são objetos separados, e só a primeira é serializada para o wire. Assim o `requestState` não vai para
+card, artifact, mensagem nem `GetTask` (verificação 34 do validador). Cada Task tem a sua própria pausa e um `asyncio.Lock`
+(a verificação 33 cobre duas Tasks pausadas ao mesmo tempo). Estado
 terminal é definitivo: `SendMessage` para Task `COMPLETED`/`CANCELED`/`FAILED` recebe erro JSON-RPC `-32004`
 (UnsupportedOperationError), e para Task inexistente `-32001` (TaskNotFoundError).
 
@@ -185,10 +177,6 @@ binding JSON-RPC, e o card segue exatamente a forma v1.0 de `exemplos/wire/07-a2
 `WORKING` → (`INPUT_REQUIRED` ↔ `WORKING`) → `COMPLETED`/`CANCELED`/`FAILED`. O `SendMessage` é síncrono e devolve a Task
 no estado em que a rodada parou; `GetTask` reflete o estado corrente a qualquer momento.
 
-**Regras de negócio** ficam só no servidor MCP: validações na ordem sala → intervalo → janela (08:00–20:00 em -03:00,
-início e fim) → duração (até 2 h); conflito por sobreposição; alternativas = salas livres no intervalo com capacidade
-≥ à pedida, até 3, ordenadas por (capacidade, id). O agente só traduz protocolo.
-
 **Logs.** O servidor MCP registra no stderr cada request na borda ASGI, antes do SDK, para que também apareçam os que o
 SDK recusa (sem `_meta`, capability ausente, `requestState` inválido). O agente também loga no stderr os requests A2A
 recebidos e os requests MCP emitidos (sem nunca imprimir o `requestState`, só o tamanho).
@@ -197,7 +185,7 @@ recebidos e os requests MCP emitidos (sem nunca imprimir o `requestState`, só o
 
 ## Saída do validador
 
-Última execução, com os dois processos recém-iniciados a partir de uma cópia limpa seguindo este README:
+Última execução, com os dois processos recém-iniciados a partir de um clone limpo:
 
 ```
 trace-id desta execucao: d0d380f31012d0e378ae8b813d25173a

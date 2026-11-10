@@ -35,7 +35,7 @@ Leitura das três medições (detalhe no README, seção Métrica):
 | `adapters.gateway` | — | 0,50 / 0 / 0,50 | 0,67 / 0 / 0,33 |
 | features | 0,75–0,80 / 0 / 0,20–0,25 | 0,67 / 0 / 0,33 | 0,67–0,75 / 0 / 0,25–0,33 |
 
-O D das features subiu levemente da v1 para a v2 (0,25 → 0,33) porque elas passaram a importar menos coisas (Ce 3 → 2): o número piorou porque a instabilidade caiu, mas o que elas importam agora é uma porta abstrata e tipos estáveis, em vez de `config` e `llm`. A métrica aponta onde olhar; o critério de pronto é a zona de dor e a direção das dependências, não o menor D possível.
+O D das features subiu levemente da v1 para a v2 (0,20-0,25 → 0,33) porque elas passaram a importar menos coisas (Ce 3 → 2): o número piorou porque a instabilidade caiu, mas o que elas importam agora é uma porta abstrata e tipos estáveis, em vez de `config` e `llm`. A métrica aponta onde olhar; o critério de pronto é a zona de dor e a direção das dependências, não o menor D possível.
 
 ## Consequências
 

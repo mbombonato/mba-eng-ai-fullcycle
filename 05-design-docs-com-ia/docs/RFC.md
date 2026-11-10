@@ -50,7 +50,7 @@ Visão em quatro blocos (detalhes no [FDD](FDD.md)):
 | ID | Alternativa | Trade-off que motivou o descarte | Fonte |
 | --- | --- | --- | --- |
 | RFC-ALT-01 | **Disparo HTTP síncrono dentro de `changeStatus`** | Acopla a disponibilidade do cliente à transação de pedidos: cliente lento trava mudanças de status de outros pedidos e cliente fora do ar forçaria rollback da mudança de status. | `[09:04] Bruno`, `[09:06] Diego` |
-| RFC-ALT-02 | **Redis Streams / fila externa** | Ganharia reatividade, mas exige subir e operar Redis Cluster; para um time pequeno é overengineering frente ao MySQL já existente. | `[09:07] Larissa`, `[09:07] Diego` |
+| RFC-ALT-02 | **Redis Streams / fila externa** | Exige subir e operar Redis Cluster; para um time pequeno é overengineering frente ao MySQL já existente. | `[09:07] Larissa`, `[09:07] Diego` |
 | RFC-ALT-03 | **Trigger de banco para acordar o worker** | Seria mais reativo que polling, mas o MySQL não tem `LISTEN/NOTIFY`; a trigger não notifica processo externo, e qualquer improviso (arquivo, endpoint) é frágil. Polling de 2 s já atende os 10 s. | `[09:09] Bruno`, `[09:09] Diego` |
 | RFC-ALT-04 | **Retry indefinido** ou **apenas 3 tentativas** | Indefinido deixa eventos pendurados para sempre; 3 tentativas cobrem só ~30 min e não sobrevivem a uma manutenção de 2 h. | `[09:15] Diego`, `[09:16] Bruno`, `[09:16] Diego` |
 | RFC-ALT-05 | **Exactly-once** | Exigiria coordenação dos dois lados e muito mais complexidade; at-least-once + `event_id` é o padrão de mercado (Stripe, GitHub). | `[09:25] Diego` |
@@ -60,7 +60,7 @@ Visão em quatro blocos (detalhes no [FDD](FDD.md)):
 
 | ID | Questão | Estado na reunião | Proposta deste RFC | Fonte |
 | --- | --- | --- | --- | --- |
-| RFC-QA-01 | **Rate limiting de saída** por cliente (ex.: 50 mudanças de status em 1 min viram 50 chamadas). | Fora do escopo; "observar e decidir depois". | Medir chamadas por webhook/minuto nos logs do worker (FDD §8) e reabrir se aparecer reclamação ou erro 429 recorrente. | `[09:38] Diego`, `[09:39] Larissa` |
+| RFC-QA-01 | **Rate limiting de saída** por cliente (ex.: 50 mudanças de status em 1 min viram 50 chamadas). | Fora do escopo; "observar e decidir depois". | Medir chamadas por webhook/minuto nos logs do worker (FDD §8) e reabrir se aparecer reclamação. | `[09:38] Diego`, `[09:39] Larissa` |
 | RFC-QA-02 | **Notificação por e-mail** ao cliente quando o webhook falha repetidamente. | Adiado para próxima fase, após medir impacto. | Nesta fase, a única visibilidade é `GET /webhooks/:id/deliveries` e a DLQ. | `[09:37] Larissa`, `[09:38] Marcos` |
 | RFC-QA-03 | **Escala para múltiplos workers** (particionar por `order_id` ou lock pessimista). | "Problema do futuro"; documentado como limitação. | Manter single-worker; o desenho da outbox não impede particionamento posterior. | `[09:13] Diego`, `[09:13] Larissa` |
 | RFC-QA-04 | **Endurecer permissões do CRUD** de webhooks (hoje qualquer role autenticada). | "Mais pra frente a gente pode endurecer." | Sem mudança na v1. | `[09:37] Sofia` |
@@ -83,7 +83,7 @@ Visão em quatro blocos (detalhes no [FDD](FDD.md)):
 
 | ID | Risco | Prob. | Impacto | Mitigação |
 | --- | --- | --- | --- | --- |
-| RFC-RISK-01 | Falha na inserção da outbox bloquear mudanças de status (rollback). | Baixa | Alto | É o comportamento desejado (consistência); testes de integração garantem que a inserção é simples e indexada. |
+| RFC-RISK-01 | Falha na inserção da outbox bloquear mudanças de status (rollback). | Baixa | Alto | É o comportamento desejado (consistência, `[09:40] Bruno`); cobrir com teste de integração de rollback (FDD-CA-02). |
 | RFC-RISK-02 | Worker parado ⇒ eventos acumulam e a latência estoura os 10 s. | Média | Alto | Processo separado da API; alerta sobre idade do evento pendente mais antigo (FDD §8). |
 | RFC-RISK-03 | Clientes não deduplicam e processam eventos repetidos. | Média | Médio | `X-Event-Id` estável e documentação destacada no portal (`[09:26] Marcos`). |
 | RFC-RISK-04 | Vazamento de secret de um cliente. | Média | Médio | Secret por endpoint, rotação com 24 h, `redact` no logger, revisão da Sofia. |

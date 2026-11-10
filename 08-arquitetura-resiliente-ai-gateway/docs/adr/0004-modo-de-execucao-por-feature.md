@@ -36,10 +36,10 @@ Síncrono. Timeout de 4 s por destino no gateway (sem retry em timeout) e teto d
 ### F2 Sugerir resposta: streaming (SSE)
 
 - Alguém está esperando agora? Sim: o atendente olha a tela e começa a ler e editar assim que o texto aparece.
-- Cabe no orçamento de latência? Não como resposta inteira: o texto completo leva ~16 s, contra 1,5 s para o primeiro trecho (e 16 s ainda é perigosamente perto dos 30 s da borda sob qualquer lentidão).
+- Cabe no orçamento de latência? Não como resposta inteira: o texto completo leva ~16 s, contra 1,5 s para o primeiro trecho (e 16 s deixa pouca margem para os 30 s da borda).
 - É consumível aos poucos? Sim: é texto corrido, lido na ordem em que é gerado.
 
-Streaming SSE (`Content-Type: text/event-stream`), no formato de Contratos sugeridos: `data: {"chunk": ...}` por trecho e `event: end` no fim. O assíncrono não serve: liberaria a conexão, mas o atendente continuaria sem ver nada até o fim. Detalhes que fazem o streaming funcionar de verdade pela borda:
+Streaming SSE (`Content-Type: text/event-stream`), no formato de Contratos sugeridos: `data: {"chunk": ...}` por trecho e `event: end` no fim. O assíncrono não serve: liberaria a conexão, mas o atendente continuaria sem ver nada até o fim. O que é necessário para o streaming atravessar a borda:
 
 - A resposta leva `X-Accel-Buffering: no`, que desliga o buffer do nginx da borda só para ela (a borda não pode ser alterada; o header é o mecanismo que o próprio nginx oferece para o upstream).
 - A aplicação espera o primeiro trecho antes de responder. Se nenhum destino atender, o cliente recebe `503` (ou `429`, recusa de governança) explícito, em vez de um `200` com stream vazio.
@@ -57,7 +57,7 @@ Asynchronous Request-Reply com polling, porque o painel roda no navegador e não
 Como a tarefa roda:
 
 - Em memória, numa thread da própria aplicação (`jobs.py`). Uma fila com worker (serviços extras) resolveria sobrevivência a reinício e escala horizontal, que o enunciado deixa fora de escopo; aqui seriam duas peças a mais a operar sem requisito que as justifique.
-- Os lotes vão até 12 ao mesmo tempo (`REPORT_CONCURRENCY`): o mês termina em ~33 s em vez de ~5,5 min. Os resultados são somados na ordem dos lotes, então o relatório é idêntico ao da execução em série (a suíte de caracterização confere).
+- Os lotes vão até 12 ao mesmo tempo (`REPORT_CONCURRENCY`): o mês termina em cerca de 30 a 35 s em vez de ~5,5 min. Os resultados são somados na ordem dos lotes, então o relatório é o mesmo da execução em série (a suíte de caracterização confere isso no período de 2 dias, com 2 lotes).
 - Prazo da tarefa: 55 s (`REPORT_DEADLINE_SECONDS`). Falha de um lote (depois de todo o retry e fallback do gateway), recusa de orçamento ou prazo estourado levam a tarefa a `failed` com o motivo, e os lotes que ainda não começaram são cancelados. Uma tarefa nunca fica presa em `running` e chega a `failed` antes de 60 s.
 
 ### F4 Extrair dados do pedido: síncrono, com timeout explícito

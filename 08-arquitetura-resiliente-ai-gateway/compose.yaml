@@ -15,7 +15,7 @@ services:
       app:
         condition: service_healthy
 
-  # Banco do gateway: guarda chaves virtuais, gasto e orçamentos (ADR 0006).
+  # Banco do gateway: guarda chaves virtuais, gasto e orçamentos (ADR 0007).
   gateway-db:
     image: postgres:16-alpine
     environment:

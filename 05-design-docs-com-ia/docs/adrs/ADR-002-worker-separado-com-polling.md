@@ -1,9 +1,12 @@
 # ADR-002 — Worker em processo separado com polling de 2 segundos
 
-- **Status:** Aceito
 - **Data da decisão:** reunião técnica de webhooks (decisão fechada em `[09:10] Larissa`)
 - **Decisores:** Larissa (Tech Lead), Diego (Plataforma), Bruno (Pedidos), Marcos (Produto)
 - **Relacionados:** [RFC](../RFC.md) · [FDD §5.2](../FDD.md#52-fluxo-2--processamento-pelo-worker) · [ADR-001](ADR-001-outbox-transacional-no-mysql.md)
+
+## Status
+
+Aceito
 
 ## Contexto
 

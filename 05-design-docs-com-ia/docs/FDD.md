@@ -4,7 +4,7 @@
 | --- | --- |
 | **Feature** | Webhooks outbound de mudança de status de pedido |
 | **Autor** | Matheus Bombonato |
-| **Status** | Pronto para implementação (pendências marcadas com ⚠️ dependem do [RFC](RFC.md#questões-em-aberto)) |
+| **Status** | Em revisão (itens marcados com ⚠️ dependem das [questões em aberto do RFC](RFC.md#questões-em-aberto)) |
 | **Base** | [RFC-001](RFC.md) · [ADR-001 a ADR-007](adrs/README.md) · [PRD](PRD.md) |
 | **Código de referência** | `src/modules/orders/order.service.ts`, `src/shared/errors/`, `src/middlewares/`, `prisma/schema.prisma` |
 
@@ -599,9 +599,9 @@ Todas as classes novas ficam em `src/modules/webhooks/webhook.errors.ts` (novo),
 | FDD-ERR-01 | `WEBHOOK_NOT_FOUND` | 404 | `WebhookNotFoundError` (`AppError`) | PATCH, DELETE, rotate, deliveries | Verificar o ID. |
 | FDD-ERR-02 | `WEBHOOK_INVALID_URL` | 400 | `WebhookInvalidUrlError` (`BadRequestError`) | POST, PATCH com URL inválida ou `http://` | Cadastrar URL `https`. |
 | FDD-ERR-03 | `WEBHOOK_CUSTOMER_NOT_FOUND` | 404 | `WebhookCustomerNotFoundError` (`AppError`) | POST, GET listagem | Verificar `customerId`. |
-| FDD-ERR-04 | `WEBHOOK_SECRET_ROTATION_IN_PROGRESS` | 409 | `ConflictError` | rotate-secret dentro do grace period | Aguardar expiração da secret anterior. |
+| FDD-ERR-04 | `WEBHOOK_SECRET_ROTATION_IN_PROGRESS` | 409 | `ConflictError` | rotate-secret dentro do grace period (proposta de implementação) | Aguardar expiração da secret anterior. |
 | FDD-ERR-05 | `WEBHOOK_DEAD_LETTER_NOT_FOUND` | 404 | `AppError` | replay | Verificar o ID. |
-| FDD-ERR-06 | `WEBHOOK_DEAD_LETTER_ALREADY_REPLAYED` | 409 | `ConflictError` | replay repetido | Nenhuma; evento já está na outbox. |
+| FDD-ERR-06 | `WEBHOOK_DEAD_LETTER_ALREADY_REPLAYED` | 409 | `ConflictError` | replay repetido (proposta de implementação) | Nenhuma; evento já está na outbox. |
 | FDD-ERR-07 | `WEBHOOK_OUTBOX_INSERT_FAILED` | 500 | `AppError` | `PATCH /orders/:id/status` | Mudança de status **não** foi aplicada (rollback); repetir. |
 | — | `VALIDATION_ERROR` / `UNAUTHORIZED` / `FORBIDDEN` | 400/401/403 | existentes | todos | Reuso sem alteração. |
 
@@ -616,7 +616,7 @@ Todas as classes novas ficam em `src/modules/webhooks/webhook.errors.ts` (novo),
 | FDD-ERR-10 | `WEBHOOK_DELIVERY_NETWORK_ERROR` | DNS, TLS ou conexão recusada. | Sim |
 | FDD-ERR-11 | `WEBHOOK_PAYLOAD_TOO_LARGE` | Corpo > 64 KB. | Não → DLQ |
 | FDD-ERR-12 | `WEBHOOK_SECRET_REQUIRED` | Endpoint sem secret válida. | Não → DLQ |
-| FDD-ERR-13 | `WEBHOOK_ENDPOINT_INACTIVE` | Endpoint desativado/removido com evento pendente. | Não → DLQ |
+| FDD-ERR-13 | `WEBHOOK_ENDPOINT_INACTIVE` | Endpoint desativado/removido com evento pendente (proposta de implementação). | Não → DLQ |
 | FDD-ERR-14 | `WEBHOOK_MAX_ATTEMPTS_EXCEEDED` | Envio inicial + 5 retentativas falharam. | Não → DLQ |
 
 ## 8. Observabilidade
@@ -741,4 +741,4 @@ src/worker.ts                # entry-point do processo worker
 | FDD-RISK-03 | Crescimento contínuo de `webhook_outbox` e `webhook_deliveries`. | Alta | Baixo | Índices em `status`/`createdAt`; métrica FDD-OBS-12; arquivamento como evolução (`[09:08] Diego`). |
 | FDD-RISK-04 | Secret exposta em log ou resposta. | Baixa | Alto | `redact`, secret só no `201` de criação e no `200` de rotação, revisão de segurança. |
 | FDD-RISK-05 | Consulta de endpoints dentro de `changeStatus` aumentar a latência da transação. | Baixa | Médio | Índice `[customerId, active]`; consulta única por mudança de status. |
-| FDD-RISK-06 | Cliente lento consumir os 10 s de timeout em sequência e atrasar o lote (processamento sequencial). | Média | Médio | Lote pequeno; métrica FDD-OBS-07 alerta antes de estourar 10 s; revisar paralelismo junto com RFC-QA-03. |
+| FDD-RISK-06 | (Risco levantado por este documento, não discutido na reunião.) Cliente lento consumir os 10 s de timeout em sequência e atrasar o lote (processamento sequencial). | Média | Médio | Lote pequeno; métrica FDD-OBS-07 alerta antes de estourar 10 s; revisar paralelismo junto com RFC-QA-03. |

@@ -25,7 +25,7 @@ Deliver video upload of up to 10GB directly to object storage (S3 multipart via 
 
 **Technical actions:**
 
-- Install in nestjs-project: `bullmq@^5.81.x`, `@nestjs/bullmq@^11.0.5`, `@aws-sdk/client-s3@^3.1156.0`, `@aws-sdk/s3-request-presigner@^3.1156.0`
+- Install in nestjs-project: `bullmq@~5.81.5`, `@nestjs/bullmq@^11.0.5`, `@aws-sdk/client-s3@~3.1156.0`, `@aws-sdk/s3-request-presigner@~3.1156.0`
 - `Dockerfile.dev`: add `ffmpeg` to the `apt install` line (shared by `nestjs-api` and `worker`)
 - Create `src/config/storage.config.ts` — `registerAs('storage')`: `S3_ENDPOINT` (default `http://minio:9000`), `S3_PUBLIC_ENDPOINT` (default `http://localhost:9000`), `S3_REGION` (default `us-east-1`), `S3_ACCESS_KEY_ID` (required), `S3_SECRET_ACCESS_KEY` (required), `S3_BUCKET` (default `streamtube`), `S3_FORCE_PATH_STYLE` (default `true`)
 - Create `src/config/queue.config.ts` — `registerAs('queue')`: `REDIS_HOST` (default `redis`), `REDIS_PORT` (default `6379`)
@@ -224,7 +224,7 @@ Deliver video upload of up to 10GB directly to object storage (S3 multipart via 
 - `src/videos/processing/video.processor.ts` — `@Processor(VIDEO_PROCESSING_QUEUE)` `WorkerHost`; on `NotAVideoFileException` mark `failed` + throw `UnrecoverableError`; on `VideoNotFound`/`InvalidVideoStatus` throw `UnrecoverableError` (nothing to mark); other errors mark `failed` only on the last attempt and rethrow (BullMQ retries)
 - `src/videos/processing/video-processing.module.ts` — imports `VideosModule`, `StorageModule`, `BullModule.registerQueue`; providers processor/service/ffmpeg
 - `src/worker.module.ts` + `src/worker.ts` — `createApplicationContext(WorkerModule)` with Config, TypeORM, Bull root and `VideoProcessingModule`; graceful shutdown hooks
-- Extract `configModuleOptions` (`src/config/config-module.options.ts`) and `typeOrmModuleOptionsFactory` (`src/database/typeorm-options.factory.ts`) shared by `AppModule` and `WorkerModule`
+- Extract `configModuleOptions` (`src/config/config-module.options.ts`) and `typeOrmAsyncOptions` (`src/database/typeorm-options.factory.ts`) shared by `AppModule` and `WorkerModule`
 
 **Dependencies:** SI-03.6, SI-03.7
 

@@ -1,9 +1,12 @@
 # ADR-003 — Retry com backoff exponencial (1m/5m/30m/2h/12h) e DLQ em tabela separada
 
-- **Status:** Aceito
 - **Data da decisão:** reunião técnica de webhooks (decisões fechadas em `[09:17] Larissa` e `[09:19] Larissa`)
 - **Decisores:** Larissa (Tech Lead), Diego (Plataforma), Bruno (Pedidos), Marcos (Produto), Sofia (Segurança)
 - **Relacionados:** [RFC](../RFC.md) · [FDD §5.3 e §5.4](../FDD.md#53-fluxo-3--retry-com-backoff) · [ADR-005](ADR-005-entrega-at-least-once-com-x-event-id.md)
+
+## Status
+
+Aceito
 
 ## Contexto
 

@@ -1,9 +1,12 @@
 # ADR-004 — Assinatura HMAC-SHA256 com secret por endpoint e rotação com grace period de 24 h
 
-- **Status:** Aceito (sujeito à revisão de segurança da Sofia antes do deploy — `[09:46] Sofia`)
 - **Data da decisão:** reunião técnica de webhooks (decisão fechada em `[09:22] Sofia`)
 - **Decisores:** Sofia (Segurança), Larissa (Tech Lead), Bruno (Pedidos), Diego (Plataforma)
 - **Relacionados:** [RFC](../RFC.md) · [FDD §6.8 e §6.5](../FDD.md#68-contrato-de-saída-requisição-enviada-ao-cliente) · [ADR-005](ADR-005-entrega-at-least-once-com-x-event-id.md)
+
+## Status
+
+Aceito (sujeito à revisão de segurança da Sofia antes do deploy — `[09:46] Sofia`)
 
 ## Contexto
 

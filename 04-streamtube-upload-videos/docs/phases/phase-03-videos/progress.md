@@ -7,7 +7,7 @@
 - **Status:** completed
 - **Tests:** 9/9 passing (env.validation.integration-spec.ts); suítes existentes verdes
 - **Observations:**
-- A imagem oficial `minio/minio` não é mais publicada (pull negado no Docker Hub e no quay.io); `minio` e `minio-init` usam `pgsty/minio:RELEASE.2026-08-04T00-00-00Z`, registrado em `phase-03-videos/TD-03`.
+- Não foi possível baixar a imagem `minio/minio` neste ambiente (pull negado no Docker Hub e no quay.io em 2026-11); `minio` e `minio-init` usam `pgsty/minio:RELEASE.2026-08-04T00-00-00Z`, registrado em `phase-03-videos/TD-03`.
 - O serviço `worker` compartilha o bind mount e o `node_modules` com `nestjs-api`; fica reiniciando (`restart: unless-stopped`) até o primeiro `npm install`.
 - Extraídos `configModuleOptions` (`src/config/config-module.options.ts`) e `typeOrmAsyncOptions` (`src/database/typeorm-options.factory.ts`) para serem compartilhados por `AppModule` e `WorkerModule` (antecipado do SI-03.8).
 
@@ -66,6 +66,6 @@
 
 ### SI-03.11 — Lint Baseline Correction (Definition of Done)
 - **Status:** completed
-- **Tests:** no tests (mudança de lint/tipos); suíte completa verde — 234/234 unit + integração (35 suítes), 69/69 e2e (5 suítes); `npx tsc --noEmit` exit 0; `npm run lint` exit 0 sem erros nem avisos; `npm run build` exit 0
+- **Tests:** no tests (mudança de lint/tipos); suíte completa verde — 234/234 unit + integração (35 suítes), 69/69 e2e (5 suítes); `npx tsc --noEmit` exit 0; `npm run lint` exit 0; `npm run build` exit 0
 - **Observations:**
 - Override no `eslint.config.mjs` desliga apenas `no-unsafe-*`, `unbound-method` e `require-await` em arquivos de teste; o código de produção em `src/` continua com as regras de type-safety.

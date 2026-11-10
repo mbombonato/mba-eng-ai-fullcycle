@@ -33,7 +33,7 @@ _Subprojects in scope:_
 
 ### Option A: BullMQ + Redis (`@nestjs/bullmq`)
 - Redis-backed job queue for Node.js. The API adds jobs with `Queue.add()`; a `Worker` (wrapped by `@Processor` / `WorkerHost` in `@nestjs/bullmq`) consumes them. Built-in retries (`attempts`), exponential `backoff`, job ids for deduplication, concurrency control, `UnrecoverableError` to skip retries, and completed/failed retention policies.
-- **Pros:** Official NestJS integration (docs.nestjs.com/techniques/queues) — `BullModule.forRootAsync` + `registerQueue` + `@InjectQueue`. Job semantics (retry/backoff/dedup by `jobId`) cover exactly what video processing needs with zero custom code. Redis is a single lightweight container (`redis:7-alpine`). Producer and consumer can live in different processes/containers sharing the same codebase.
+- **Pros:** Official NestJS integration (docs.nestjs.com/techniques/queues) — `BullModule.forRootAsync` + `registerQueue` + `@InjectQueue`. Job semantics (retry/backoff/dedup by `jobId`) cover the needs of video processing with little custom code. Redis is a single lightweight container (`redis:7-alpine`). Producer and consumer can live in different processes/containers sharing the same codebase.
 - **Cons:** Adds Redis as a new stateful service. At-least-once delivery — the worker must be idempotent. Redis persistence must be configured if jobs must survive a Redis restart (AOF).
 
 ### Option B: RabbitMQ (`@nestjs/microservices` RMQ transport or `amqplib`)
@@ -46,11 +46,11 @@ _Subprojects in scope:_
 - **Pros:** No new infrastructure. Jobs can be enqueued in the same DB transaction as the video update (transactional outbox for free).
 - **Cons:** No official NestJS module (community wrappers only). Polling load on the main database, which also serves the API. The architecture diagram models the queue as its own container — this option would collapse it into the database, contradicting the target design.
 
-**Recommendation:** **Option A (BullMQ + Redis)** — first-class NestJS integration and native retry/backoff/dedup semantics make the worker the smallest and most testable; Redis is a trivial container and matches the diagram's separate "Message Queue" container. Version pin: `bullmq@^5.81` (the mature 5.x line — 6.0.0, released 2026-07-30, removed Redis internals from the public API and turned `ioredis` into an optional peer; `@nestjs/bullmq@11.0.5` supports both, but the 5.x line is the one documented by the NestJS recipe) with `@nestjs/bullmq@^11.0.5` (NestJS 11 peer).
+**Recommendation:** **Option A (BullMQ + Redis)** — first-class NestJS integration and native retry/backoff/dedup semantics keep the worker small; Redis is a single extra container and matches the diagram's separate "Message Queue" container. Version pin: `bullmq@~5.81.5` (the mature 5.x line — 6.0.0, released 2026-07-30, removed Redis internals from the public API and turned `ioredis` into an optional peer; `@nestjs/bullmq@11.0.5` supports both, but the 5.x line is the one documented by the NestJS recipe) with `@nestjs/bullmq@^11.0.5` (NestJS 11 peer).
 
 **Decision:** A (BullMQ + Redis)
 
-**Libraries:** `bullmq@^5.81.x`, `@nestjs/bullmq@^11.0.5`
+**Libraries:** `bullmq@~5.81.5`, `@nestjs/bullmq@^11.0.5`
 
 ---
 
@@ -83,7 +83,7 @@ _Subprojects in scope:_
 
 **Decision:** B (Direct-to-storage S3 multipart with presigned part URLs)
 
-**Libraries:** `@aws-sdk/client-s3@^3.1156.0`, `@aws-sdk/s3-request-presigner@^3.1156.0`
+**Libraries:** `@aws-sdk/client-s3@~3.1156.0`, `@aws-sdk/s3-request-presigner@~3.1156.0`
 
 ---
 
@@ -107,11 +107,11 @@ _Subprojects in scope:_
 - **Pros:** Thumbnails cacheable by a CDN without signing.
 - **Cons:** Public bucket is a security decision that belongs with visibility (public/unlisted is Phase 04). Two buckets to create/configure. Cleanup spans buckets.
 
-**Recommendation:** **Option A** — single private bucket with per-video prefixes and presigned access keeps visibility decisions for Phase 04 and works unchanged on S3. Client options for MinIO: `forcePathStyle: true`, `requestChecksumCalculation: 'WHEN_REQUIRED'` and `responseChecksumValidation: 'WHEN_REQUIRED'` (AWS SDK v3 ≥ 3.729 adds CRC checksums by default, which third-party S3 implementations and presigned part URLs do not expect). Libraries: `@aws-sdk/client-s3@^3.1156.0`, `@aws-sdk/s3-request-presigner@^3.1156.0`.
+**Recommendation:** **Option A** — single private bucket with per-video prefixes and presigned access keeps visibility decisions for Phase 04 and works unchanged on S3. Client options for MinIO: `forcePathStyle: true`, `requestChecksumCalculation: 'WHEN_REQUIRED'` and `responseChecksumValidation: 'WHEN_REQUIRED'` (AWS SDK v3 ≥ 3.729 adds CRC checksums by default, which third-party S3 implementations and presigned part URLs do not expect). Libraries: `@aws-sdk/client-s3@~3.1156.0`, `@aws-sdk/s3-request-presigner@~3.1156.0`.
 
 **Decision:** A (Single private bucket, per-video key prefix, internal + public S3 clients)
 
-**Libraries:** `@aws-sdk/client-s3@^3.1156.0`, `@aws-sdk/s3-request-presigner@^3.1156.0`
+**Libraries:** `@aws-sdk/client-s3@~3.1156.0`, `@aws-sdk/s3-request-presigner@~3.1156.0`
 
 ---
 
@@ -207,7 +207,7 @@ _Subprojects in scope:_
 
 **Decision:** B (Authorize + 302 redirect to presigned GET; storage serves Range/206)
 
-**Libraries:** `@aws-sdk/s3-request-presigner@^3.1156.0`
+**Libraries:** `@aws-sdk/s3-request-presigner@~3.1156.0`
 
 ---
 
@@ -234,7 +234,7 @@ _Subprojects in scope:_
 
 **Decision:** A (`draft → processing → ready | failed`, queue retries, terminal `failed` with reason)
 
-**Libraries:** `bullmq@^5.81.x`
+**Libraries:** `bullmq@~5.81.5`
 
 ---
 

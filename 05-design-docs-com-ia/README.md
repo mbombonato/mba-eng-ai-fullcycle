@@ -14,7 +14,7 @@ A tarefa foi transformar essa transcrição, cruzada com o código real da aplic
 | --- | --- |
 | **Claude Code (modelo Claude Opus)** | Agente principal: leu o código (`src/`, `prisma/`, `tests/`), a transcrição e o enunciado direto no repositório, extraiu decisões/descartes, redigiu todos os documentos e executou as checagens automáticas. |
 | **Subagente orquestrador do Claude Code** | Distribuiu os desafios do MBA em pastas isoladas do monorepo e passou o briefing do desafio (prompt 1 abaixo), com a restrição de não tocar em código nem em git. |
-| **Script Python de verificação (gerado pela IA, executado localmente)** | "Juiz" anti-alucinação: valida que cada `[hh:mm] Nome` do Tracker existe de fato na transcrição com aquele falante, que cada caminho `CODIGO` existe, que todo ID dos documentos está no Tracker (e vice-versa), que as âncoras dos links resolvem e calcula o percentual de linhas `TRANSCRICAO`. |
+| **Script Python de verificação (gerado pela IA, executado localmente)** | Checagem sintática do Tracker (o script não foi versionado e não avalia se a fala sustenta o item): valida que cada `[hh:mm] Nome` do Tracker existe de fato na transcrição com aquele falante, que cada caminho `CODIGO` existe, que todo ID dos documentos está no Tracker (e vice-versa), que as âncoras dos links resolvem e calcula o percentual de linhas `TRANSCRICAO`. |
 
 ## Workflow adotado
 
@@ -23,10 +23,10 @@ Segui a ordem sugerida no enunciado, com uma etapa de inventário antes de escre
 1. **Contextualização** — leitura integral de `ENUNCIADO.md`, `TRANSCRICAO.md` e do código. Do código, mapeei os pontos de integração reais: `changeStatus` em `src/modules/orders/order.service.ts`, a máquina de estados em `src/modules/orders/order.status.ts`, `AppError`/`http-errors.ts`, `errorMiddleware`, `requireRole`, o logger Pino com `redact`, `createPrismaClient()` e o bootstrap de `src/server.ts`.
 2. **Inventário da transcrição** — classificação de cada fala relevante em *decisão fechada*, *requisito*, *restrição*, *descartado*, *adiado* ou *não discutido* (prompt 2).
 3. **ADRs primeiro** — 7 ADRs: as 6 decisões principais + uma secundária (snapshot do payload e filtro na inserção), porque ela tem alternativas reais discutidas.
-4. **RFC** — consolidação em nível de arquitetura, com 6 alternativas descartadas e 9 questões em aberto, linkando os ADRs. Mantido curto de propósito: nenhum schema, payload ou código.
-5. **FDD** — schema Prisma, 5 fluxos, 8 contratos com exemplos, matriz `WEBHOOK_*`, observabilidade, resiliência e a seção "Integração com o sistema existente" com 14 arquivos reais.
+4. **RFC** — consolidação em nível de arquitetura, com 6 alternativas descartadas e 9 questões em aberto, linkando os ADRs. Sem schema nem payloads; o detalhamento fica no FDD.
+5. **FDD** — schema Prisma, 5 fluxos, 7 endpoints HTTP com exemplos mais o contrato da requisição enviada ao cliente, matriz `WEBHOOK_*`, observabilidade, resiliência e a seção "Integração com o sistema existente" com 14 arquivos reais.
 6. **PRD** — por último entre os grandes, como consolidação em linguagem de produto.
-7. **Tracker** — IDs foram colocados *dentro* dos documentos (`PRD-FR-01`, `FDD-CONTRATO-03`…) para que cada linha do Tracker aponte para algo localizável; depois rodei o script de verificação (prompt 3).
+7. **Tracker** — IDs foram colocados *dentro* de PRD, RFC e FDD (`PRD-FR-01`, `FDD-CONTRATO-03`…) para que cada linha do Tracker aponte para algo localizável; nos ADRs, os sub-itens (`ADR-NNN-ALT-NN`, `ADR-NNN-CONS-NN`) seguem a ordem das linhas de cada ADR, sem ID escrito no arquivo; depois rodei o script de verificação (prompt 3).
 8. **Revisão final** item a item contra os critérios de aceite.
 
 ## Prompts customizados
@@ -92,7 +92,7 @@ Foram **4 ciclos principais** (inventário → ADRs/RFC → FDD/PRD → tracker 
 5. **Conflito com o código.** O código de erro `WEBHOOK_INVALID_URL` (`[09:28] Bruno`) não chegaria ao cliente se a regra `https` ficasse só no Zod, porque `validate.middleware.ts` converte qualquer `ZodError` em `VALIDATION_ERROR`. O FDD documenta como o service emite o código específico. Outro caso: a FK de `webhook_outbox.orderId` foi removida porque `OrderService.delete` permite excluir pedidos `CANCELLED`, e o cascade apagaria eventos pendentes.
 6. **Arquivos inexistentes.** O script apontou `src/worker.ts` e `src/modules/webhooks/*` como caminhos inexistentes. Todas as menções foram marcadas como "novo/a criar", e o Tracker usa apenas caminhos reais em linhas `CODIGO`. O `docs/adrs/README.md` do boilerplate sugeria a nomenclatura `0001-titulo.md`, que conflitava com a exigida (`ADR-NNN-…`), e foi atualizado como índice.
 
-Resultado da última execução do verificador: 269 linhas no Tracker (≈ 89% `TRANSCRICAO`, 30 `CODIGO`), 100% dos IDs dos documentos rastreados, 0 timestamps inválidos, 0 links quebrados.
+Resultado da última execução do verificador: 269 linhas no Tracker (239 `TRANSCRICAO`, 30 `CODIGO`), todos os IDs dos documentos presentes no Tracker, todos os pares `[hh:mm] Nome` existentes na transcrição e nenhum link quebrado. A checagem é sintática: ela não valida se a fala sustenta o item.
 
 ## Como navegar a entrega
 

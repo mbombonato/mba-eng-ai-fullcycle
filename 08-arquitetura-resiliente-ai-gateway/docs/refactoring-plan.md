@@ -50,7 +50,7 @@ Critério revisado (depois do piloto, ver seção 5), que vale para a `v2-decoup
 
 Escopo do piloto: um único componente. Criados `ports.py` (só `TextModel.complete`) e `adapters/gateway.py` (`GatewayTextModel`, SDK `openai` apontado para `http://gateway:4000/v1` com a chave virtual); `classification.classify` passou a receber o modelo por parâmetro e a pedir a capacidade lógica `ticket-classification`; `main` monta o adaptador. As outras três features continuaram usando `llm.py`. O gateway subiu com a capacidade `ticket-classification` apontando para `openai/gpt-fake-large` (o mesmo modelo da v1).
 
-Medição antes (v1) e depois do piloto:
+Medição antes (v1) e depois do piloto (o estado do piloto não foi commitado nem salvo em `metrics/results/`; os valores do piloto foram obtidos com o mesmo script na árvore de trabalho daquele momento):
 
 | Componente | Antes (Ca, Ce, I, A, D) | Depois do piloto |
 |---|---|---|

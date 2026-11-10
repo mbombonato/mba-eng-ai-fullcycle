@@ -48,7 +48,7 @@ var/                # bancos SQLite gerados em tempo de execução (fora do Git)
 | Agente | Responsabilidade | Como é acionado | Por quê |
 |---|---|---|---|
 | `assistente_aurora` | Conversa com o morador e distribui o trabalho. Não tem tools de dados e **não recebe o regulamento** nas instruções. | Raiz do `App` (`agents.py`, `build_root_agent`). | Ponto único de entrada; prompt curto e barato em todas as chamadas. |
-| `especialista_reservas` | Reservar, consultar disponibilidade, listar e cancelar reservas do apartamento da sessão. | **Sub-agente por transferência** (`transfer_to_agent`). | A tool `reservar_area` pede confirmação. Para retomar a execução, a resposta da confirmação precisa chegar ao agente que fez o pedido; com sub-agentes o pedido fica nos eventos da **mesma sessão persistida**, e o Runner retoma no autor da chamada original. Num `AgentTool` o especialista roda numa sessão em memória descartável e o pedido de confirmação se perderia. |
+| `especialista_reservas` | Reservar, consultar disponibilidade, listar e cancelar reservas do apartamento da sessão. | **Sub-agente por transferência** (`transfer_to_agent`). | A tool `reservar_area` pede confirmação. Para retomar a execução, a resposta da confirmação precisa chegar ao agente que fez o pedido; com sub-agentes o pedido fica nos eventos da **mesma sessão persistida**, e o Runner retoma no autor da chamada original. Num `AgentTool` o especialista roda numa sessão em memória descartável, fora da sessão persistida onde a rota de confirmações procura os pedidos pendentes; por isso optei por sub-agentes. |
 | `especialista_visitantes` | Autorizar visitantes e listar os visitantes do apartamento da sessão. | **Sub-agente por transferência**. | Mesmo motivo: `autorizar_visitante` sempre pede confirmação. |
 | `especialista_regulamento` | Responder dúvidas consultando **um** capítulo do regulamento. | **`AgentTool`** do agente principal. | O `AgentTool` executa o especialista numa sessão isolada (`InMemorySessionService`); só a resposta final volta para a sessão do morador. O capítulo consultado nunca entra no histórico, e por isso não acompanha as mensagens seguintes. |
 
@@ -60,8 +60,7 @@ fica previsível para o Runner na hora de retomar uma confirmação.
 - `var/condominio.db`: apartamentos, áreas, reservas (com status `ativa`/`cancelada`), visitantes, códigos emitidos e o vínculo sessão→apartamento. Nasce de `dados/` na primeira subida ou no comando de restauração.
 - `var/sessoes.db`: sessões e eventos do ADK (`DatabaseSessionService` com `sqlite+aiosqlite`).
 
-**Modelo:** Gemini via Google AI Studio. O padrão é `gemini-3.6-flash` (estável).
-O `gemini-2.5-flash` foi descontinuado no AI Studio e passa a ser redirecionado em 01/12/2026.
+**Modelo:** Gemini via Google AI Studio. O padrão é `gemini-3.6-flash`.
 O modelo pode ser trocado em `AURORA_MODELO`, ou por agente em `AURORA_MODELO_PRINCIPAL` e `AURORA_MODELO_ESPECIALISTAS`.
 
 ---
@@ -100,7 +99,7 @@ O modelo pode ser trocado em `AURORA_MODELO`, ou por agente em `AURORA_MODELO_PR
 - **`src/aurora/agents.py`, `build_root_agent`:** `tools=[AgentTool(agent=especialista_regulamento)]`. O especialista roda numa sessão em memória isolada. Na sessão do morador ficam só a chamada (`functionCall` com a pergunta) e a resposta curta (`functionResponse`).
 - **`src/aurora/regulamento.py`, `buscar_capitulo` / `escolher_capitulo`, e `tools.py`, `consultar_regulamento`:** o código divide `dados/regulamento.md` por capítulo (`## `) e devolve **um único capítulo**, escolhido pelo título ou por relevância. Nem o especialista recebe o regulamento inteiro.
 
-**Por que não depende do modelo:** o isolamento de sessão do `AgentTool` e o recorte por capítulo estão no código. Ainda que o modelo tentasse copiar o texto, ele só teria o capítulo do assunto perguntado. O teste `test_g4_eventos_nao_contem_outros_capitulos` procura trechos de todos os outros capítulos nos eventos.
+**O que o código garante:** o texto do regulamento só circula na sessão em memória do `AgentTool`, e cada chamada de `consultar_regulamento` devolve um único capítulo. Na sessão do morador entra apenas a resposta final do especialista, que é instruído a responder de forma curta. O teste `test_g4_eventos_nao_contem_outros_capitulos` procura trechos de todos os outros capítulos nos eventos.
 
 ### Garantia 5: dois moradores, uma reserva
 
@@ -111,7 +110,7 @@ O modelo pode ser trocado em `AURORA_MODELO`, ou por agente em `AURORA_MODELO_PR
   ```
 - **`src/aurora/db.py`, `criar_reserva`:** faz o `INSERT` dentro de `BEGIN IMMEDIATE`. Se o índice recusar (`IntegrityError` em `reservas.area, reservas.data`), devolve `ResultadoReserva("ocupada")`, e a tool responde normalmente `indisponivel`, com HTTP 200.
 
-**Por que não depende do modelo nem da conferência prévia:** a conferência de agenda em `reservar_area` só evita pedir confirmação à toa. Quem impede a duplicata é o banco, no instante da gravação. Os testes cobrem 16 threads disputando a mesma data, um `INSERT` direto que ignora a agenda e duas aprovações simultâneas por HTTP (`&`).
+**Por que não depende do modelo nem da conferência prévia:** a conferência de agenda em `reservar_area` só evita pedir confirmação à toa. Quem impede a duplicata é o banco, no instante da gravação. Os testes cobrem 16 threads disputando a mesma data, um `INSERT` direto que ignora a agenda e duas aprovações concorrentes (no serviço e pelo cliente de teste da API).
 
 **Regra de negócio 5 (códigos únicos):** o código `RSV-XXXXXX` é aleatório e passa pela tabela `codigos_emitidos` (`PRIMARY KEY`). Reservas canceladas mantêm a linha e o código, e um código já emitido nunca é reutilizado.
 
@@ -137,7 +136,6 @@ cp .env.example .env
 | `AURORA_MODELO_PRINCIPAL` / `AURORA_MODELO_ESPECIALISTAS` | não | Modelo por papel (padrão: `AURORA_MODELO`). |
 | `AURORA_VAR_DIR` | não | Pasta dos bancos SQLite (padrão `./var`). |
 | `AURORA_PORT` | não | Porta da API (padrão `8000`). |
-| `AURORA_PROVEDOR` / `OPENAI_API_KEY` | não | Modo alternativo **opcional** `openai` via LiteLLM (ver abaixo). O padrão é `gemini`. |
 
 ### Instalar, restaurar e subir
 
@@ -165,23 +163,15 @@ curl -s localhost:8000/apartamentos/101/reservas
 Se o provedor do modelo falhar (chave ausente, cota, rede), as rotas de conversa respondem
 `502` com a causa. As rotas de verificação funcionam sem chave.
 
-### Provedor alternativo (opcional)
+### Fluxo do avaliador automatizado
 
-O desafio exige Gemini, que é o padrão. Para validar sem chave do AI Studio, o projeto também
-roda com modelos OpenAI pelo `LiteLlm` do ADK. A troca de provedor não muda nenhuma
-garantia, porque todas estão no código.
+`python3 scripts/fluxo_avaliador.py` executa os passos 1 a 14 do enunciado por HTTP contra a API real
+(restaura os dados, sobe e reinicia a API, dispara as aprovações simultâneas). Na execução de 2026-11-09,
+a partir de um clone limpo e com `gemini-3.6-flash`, as 37 verificações do script passaram. Como o fluxo
+depende do modelo, o resultado pode variar entre execuções.
 
-```bash
-uv sync --extra openai
-# no .env: AURORA_PROVEDOR=openai, OPENAI_API_KEY=..., (opcional) AURORA_MODELO=openai/gpt-4.1-mini
-uv run --extra openai aurora-api
-```
-
-O fluxo completo do avaliador (passos 1 a 14, com reinício e aprovações simultâneas) foi
-executado por HTTP com `openai/gpt-4.1-mini`, e todas as verificações passaram.
-Com o provedor padrão (`gemini-3.6-flash` no AI Studio), o fluxo completo do avaliador (passos 1 a 14)
-também foi executado por HTTP a partir de um clone limpo, incluindo o reinício da API e as aprovações
-simultâneas: as 37 verificações passaram.
+Para validação local sem chave do AI Studio existe um modo opcional `AURORA_PROVEDOR=openai` (extra `openai`
+do `pyproject.toml`); o desafio exige Gemini, que é o padrão.
 
 ### Testes (sem chave de API)
 
@@ -189,9 +179,6 @@ simultâneas: as 37 verificações passaram.
 uv run pytest
 ```
 
-Os testes trocam o Gemini por um LLM falso e determinístico (`tests/fake_llm.py`) e
-exercitam o ADK real: Runner, transferências, `AgentTool`, confirmação de tools e
-sessão persistida em SQLite. Cobrem:
-- o fluxo completo do avaliador, passos 1 a 14, com reinício da API e aprovações simultâneas (`tests/test_fluxo_avaliador.py`);
-- cada uma das cinco garantias, incluindo um modelo "malicioso" (`tests/test_garantias.py`);
-- o contrato da API: campos, `201`, `404` e `409` (`tests/test_contrato_api.py`).
+São 26 testes que usam um LLM falso roteirizado (`tests/fake_llm.py`). Eles validam o código das garantias
+(`tests/test_garantias.py`), o encadeamento do fluxo do avaliador (`tests/test_fluxo_avaliador.py`) e o contrato da API
+(`tests/test_contrato_api.py`), não o comportamento do Gemini.

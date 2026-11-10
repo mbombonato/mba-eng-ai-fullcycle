@@ -20,9 +20,9 @@ A pergunta aqui não é técnica ("como chamar o modelo"), é de negócio: com q
 
 Opção 2.
 
-- Providers aceitos: OpenAI e Anthropic. Os dois já têm contrato e já recebem dados do helpdesk; ter dois permite que um cubra a indisponibilidade do outro (ADR 0005). Um provider único (opção 3) faria de qualquer instabilidade dele uma parada total do atendimento, que é exatamente a dor do cenário.
+- Providers aceitos: OpenAI e Anthropic. Os dois já são usados pelo helpdesk (F1/F4 na OpenAI, F2/F3 na Anthropic); ter dois permite que um cubra a indisponibilidade do outro (ADR 0005). Um provider único (opção 3) faria de qualquer instabilidade dele uma parada total do atendimento, que é exatamente a dor do cenário.
 - Nenhum sistema chama provider diretamente: o acesso é só pelo AI Gateway (ADR 0002), que é o único lugar com credencial de provider.
-- Teto de gasto do helpdesk com IA: US$ 50 por mês, dividido em US$ 30 para as features em tempo real (F1, F2, F4) e US$ 20 para os relatórios (F3). O valor cobre com folga o uso esperado com os preços da tabela do provider e transforma um vazamento (como o relatório que roda depois do `504`) em recusa explícita em vez de fatura.
+- Teto de gasto do helpdesk com IA: US$ 50 por mês, dividido em US$ 30 para as features em tempo real (F1, F2, F4) e US$ 20 para os relatórios (F3). O valor é um teto de referência para a demonstração (não foi dimensionado por volume real) e transforma um vazamento (como o relatório que roda depois do `504`) em recusa explícita em vez de fatura.
 
 ## Consequências
 

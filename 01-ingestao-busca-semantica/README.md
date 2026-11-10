@@ -10,14 +10,14 @@ Este software:
 
 ## Tecnologias
 
-- Python 3.11+ (testado com Python 3.14)
+- Python 3 (testado com Python 3.14)
 - LangChain (`langchain-openai`, `langchain-google-genai`, `langchain-postgres`, `langchain-text-splitters`, `langchain-community`)
 - PostgreSQL 17 + pgVector (Docker Compose)
 - Provedor de modelos: **OpenAI** (padrão) ou **Gemini**
 
 ## Modelos utilizados
 
-O desafio não fixa modelos. Os padrões são os modelos leves/baratos disponíveis atualmente, e todos podem ser trocados no `.env`:
+O desafio não fixa modelos. Os padrões abaixo foram escolhidos entre os modelos mais leves de cada provedor na data da entrega, e todos podem ser trocados no `.env`:
 
 | Provedor | Embeddings | LLM |
 |---|---|---|
@@ -43,7 +43,7 @@ O desafio não fixa modelos. Os padrões são os modelos leves/baratos disponív
 
 ## Pré-requisitos
 
-- Python 3.11 ou superior
+- Python 3 (testado com 3.14)
 - Docker e Docker Compose
 - Uma API Key da **OpenAI** (https://platform.openai.com/api-keys) **ou** da **Google** (https://aistudio.google.com/apikey)
 
@@ -111,7 +111,7 @@ O desafio não fixa modelos. Os padrões são os modelos leves/baratos disponív
 
    Digite `sair` (ou `Ctrl+C`) para encerrar.
 
-## Exemplo de uso
+## Exemplo de uso (formato esperado, conforme o enunciado)
 
 ```
 Chat iniciado. Digite 'sair' (ou Ctrl+C) para encerrar.
@@ -133,7 +133,7 @@ Até logo!
 
 ## Testes
 
-Os testes não precisam de chave de API: usam embeddings determinísticos e uma LLM fake. Eles conferem o split (1000/150), o prompt, o uso de `k=10` e o fluxo completo de ingestão e busca no pgVector. Os testes de integração são pulados quando o banco não está acessível.
+Os testes não precisam de chave de API: usam embeddings determinísticos e uma LLM fake. Eles conferem o tamanho máximo dos chunks (1000) e as constantes de split, trechos do prompt, o uso de `k=10` e, com o banco no ar, a ingestão e a busca no pgVector. Os testes de integração são pulados quando o banco não está acessível.
 
 ```bash
 docker compose up -d

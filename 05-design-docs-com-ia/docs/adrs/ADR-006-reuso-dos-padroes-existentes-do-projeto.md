@@ -1,9 +1,12 @@
 # ADR-006 — Reuso máximo dos padrões existentes do projeto
 
-- **Status:** Aceito
 - **Data da decisão:** reunião técnica de webhooks (decisão fechada em `[09:30] Larissa`)
 - **Decisores:** Larissa (Tech Lead), Bruno (Pedidos), Diego (Plataforma), Sofia (Segurança)
 - **Relacionados:** [RFC](../RFC.md) · [FDD §10 — Integração com o sistema existente](../FDD.md#10-integração-com-o-sistema-existente) · [ADR-002](ADR-002-worker-separado-com-polling.md)
+
+## Status
+
+Aceito
 
 ## Contexto
 

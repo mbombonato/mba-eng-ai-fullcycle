@@ -61,7 +61,7 @@ Fallback com modelo fraco, feature por feature (a pergunta: uma resposta pior é
 
 ## Consequências
 
-- Uma queda de provider custa ao usuário a latência das tentativas no primário (~1 a 2 s) e nada mais; não derruba metade do helpdesk.
+- Com o provider respondendo erro, a queda custa ao usuário a latência das tentativas no primário (~1 a 2 s). Com o provider travado, custa o timeout do destino antes do fallback. Em nenhum dos casos metade do helpdesk cai junto.
 - A política de cada feature muda editando a lista `fallbacks` do gateway, sem deploy da aplicação.
 - Não há circuit breaker (fora de escopo; `disable_cooldowns: true`): durante uma queda longa, cada requisição paga de novo as tentativas no primário.
 - Com timeouts por destino de 4 s, a pior cadeia da F1 (três destinos travados) é ~12 s; a aplicação corta em 12 s e devolve `503`, dentro dos 15 s.

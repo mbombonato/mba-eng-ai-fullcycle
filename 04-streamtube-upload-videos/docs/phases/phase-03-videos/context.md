@@ -44,13 +44,13 @@ sources_mtime:
 
 | Ref | Source | Scope | Topic | Status | Decision | Libraries |
 |-----|--------|-------|-------|--------|----------|-----------|
-| phase-03-videos/TD-01 | technical-decisions-phase-03-videos.md | Backend | Message Queue Technology | decided | A (BullMQ + Redis) | bullmq@^5.81.x, @nestjs/bullmq@^11.0.5 |
-| phase-03-videos/TD-02 | technical-decisions-phase-03-videos.md | Backend | 10GB Upload Strategy | decided | B (Direct S3 multipart with presigned part URLs) | @aws-sdk/client-s3@^3.1156.0, @aws-sdk/s3-request-presigner@^3.1156.0 |
-| phase-03-videos/TD-03 | technical-decisions-phase-03-videos.md | Backend | Object Storage Layout and S3 Client | decided | A (Single private bucket, internal + public clients) | @aws-sdk/client-s3@^3.1156.0, @aws-sdk/s3-request-presigner@^3.1156.0 |
+| phase-03-videos/TD-01 | technical-decisions-phase-03-videos.md | Backend | Message Queue Technology | decided | A (BullMQ + Redis) | bullmq@~5.81.5, @nestjs/bullmq@^11.0.5 |
+| phase-03-videos/TD-02 | technical-decisions-phase-03-videos.md | Backend | 10GB Upload Strategy | decided | B (Direct S3 multipart with presigned part URLs) | @aws-sdk/client-s3@~3.1156.0, @aws-sdk/s3-request-presigner@~3.1156.0 |
+| phase-03-videos/TD-03 | technical-decisions-phase-03-videos.md | Backend | Object Storage Layout and S3 Client | decided | A (Single private bucket, internal + public clients) | @aws-sdk/client-s3@~3.1156.0, @aws-sdk/s3-request-presigner@~3.1156.0 |
 | phase-03-videos/TD-04 | technical-decisions-phase-03-videos.md | Backend | Video Worker Runtime and FFmpeg | decided | A (Same codebase, separate container, spawn over presigned URL) | — (ffmpeg Debian package) |
 | phase-03-videos/TD-05 | technical-decisions-phase-03-videos.md | Backend | Unique Video URL | decided | B (11-char base64url slug + unique + retry) | — |
-| phase-03-videos/TD-06 | technical-decisions-phase-03-videos.md | Backend | Streaming and Download Delivery | decided | B (302 to presigned GET; storage Range/206) | @aws-sdk/s3-request-presigner@^3.1156.0 |
-| phase-03-videos/TD-07 | technical-decisions-phase-03-videos.md | Backend | Status Lifecycle and Failure Handling | decided | A (draft → processing → ready/failed) | bullmq@^5.81.x |
+| phase-03-videos/TD-06 | technical-decisions-phase-03-videos.md | Backend | Streaming and Download Delivery | decided | B (302 to presigned GET; storage Range/206) | @aws-sdk/s3-request-presigner@~3.1156.0 |
+| phase-03-videos/TD-07 | technical-decisions-phase-03-videos.md | Backend | Status Lifecycle and Failure Handling | decided | A (draft → processing → ready/failed) | bullmq@~5.81.5 |
 | phase-03-videos/TD-08 | technical-decisions-phase-03-videos.md | Backend | Owner Visibility of Non-Ready Videos on Public Routes | decided | A (Optional auth on `@Public()` routes) | — |
 
 _Source files:_
@@ -75,21 +75,21 @@ _Source files:_
 
 ### phase-03-videos/TD-01
 
-**Recommendation:** Option A (BullMQ + Redis) — first-class NestJS integration and native retry/backoff/dedup semantics; Redis is a trivial container matching the diagram's separate "Message Queue". Pin `bullmq@^5.81` (mature 5.x line; 6.0.0 removed Redis internals and made `ioredis` an optional peer) with `@nestjs/bullmq@^11.0.5`.
+**Recommendation:** Option A (BullMQ + Redis) — first-class NestJS integration and native retry/backoff/dedup semantics; Redis is a trivial container matching the diagram's separate "Message Queue". Pin `bullmq@~5.81.5` (mature 5.x line; 6.0.0 removed Redis internals and made `ioredis` an optional peer) with `@nestjs/bullmq@^11.0.5`.
 
-**Libraries:** `bullmq@^5.81.x`, `@nestjs/bullmq@^11.0.5`
+**Libraries:** `bullmq@~5.81.5`, `@nestjs/bullmq@^11.0.5`
 
 ### phase-03-videos/TD-02
 
 **Recommendation:** Option B — the API never touches video bytes. `POST /videos` opens the multipart upload, pre-registers the draft and returns presigned part URLs; the client completes via `POST /videos/:slug/upload/complete`. Part size `UPLOAD_PART_SIZE_MB` (100 MiB), max size constant `VIDEO_MAX_FILE_SIZE_BYTES` (10 GiB), URL expiry `UPLOAD_URL_EXPIRATION_SECONDS` (24h). Actual size re-checked with `HeadObject`.
 
-**Libraries:** `@aws-sdk/client-s3@^3.1156.0`, `@aws-sdk/s3-request-presigner@^3.1156.0`
+**Libraries:** `@aws-sdk/client-s3@~3.1156.0`, `@aws-sdk/s3-request-presigner@~3.1156.0`
 
 ### phase-03-videos/TD-03
 
 **Recommendation:** Option A — single private bucket (`S3_BUCKET`), keys `videos/{videoId}/source` and `videos/{videoId}/thumbnail.jpg`; internal client on `S3_ENDPOINT` (`http://minio:9000`) and presign client on `S3_PUBLIC_ENDPOINT`; `forcePathStyle: true`, checksums `WHEN_REQUIRED`; bucket created by a one-shot `minio-init` Compose service; image `pgsty/minio:RELEASE.2026-08-04T00-00-00Z` (official `minio/minio` images no longer published).
 
-**Libraries:** `@aws-sdk/client-s3@^3.1156.0`, `@aws-sdk/s3-request-presigner@^3.1156.0`
+**Libraries:** `@aws-sdk/client-s3@~3.1156.0`, `@aws-sdk/s3-request-presigner@~3.1156.0`
 
 ### phase-03-videos/TD-04
 
@@ -107,13 +107,13 @@ _Source files:_
 
 **Recommendation:** Option B — `GET /videos/:slug/stream`, `/download`, `/thumbnail` authorize and answer `302` to a short-lived presigned GET (`STREAM_URL_EXPIRATION_SECONDS`, 1h); storage answers `Range` with `206 Partial Content`. Download uses `ResponseContentDisposition: attachment`.
 
-**Libraries:** `@aws-sdk/s3-request-presigner@^3.1156.0`
+**Libraries:** `@aws-sdk/s3-request-presigner@~3.1156.0`
 
 ### phase-03-videos/TD-07
 
 **Recommendation:** Option A — `draft` (upload open) → `processing` (upload completed, job enqueued with `jobId = videoId`, 3 attempts, exponential backoff 5s) → `ready` | `failed` (+ `failure_reason`). Non-video input → `UnrecoverableError` (no retry). Worker idempotent.
 
-**Libraries:** `bullmq@^5.81.x`
+**Libraries:** `bullmq@~5.81.5`
 
 ### phase-03-videos/TD-08
 

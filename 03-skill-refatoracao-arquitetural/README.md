@@ -3,9 +3,9 @@
 Entrega do desafio **"Criação de Skills — Refatoração Arquitetural Automatizada"** (MBA Engenharia de
 Software com IA — Full Cycle). O enunciado completo está em [`ENUNCIADO.md`](ENUNCIADO.md).
 
-A skill `refactor-arch` (Claude Code) analisa qualquer backend, gera um relatório de auditoria com
+A skill `refactor-arch` (Claude Code) analisa um backend web (exercitada em Flask e Express, com heurísticas de detecção para outras stacks), gera um relatório de auditoria com
 severidade e `arquivo:linha` exatos e — **somente após confirmação humana** — refatora o projeto para
-MVC, validando boot e endpoints. Ela foi executada nos três projetos legados deste repositório.
+MVC, validando boot e endpoints. Ela foi aplicada aos três projetos legados deste repositório (ver "Nota sobre a execução registrada").
 
 ```
 .
@@ -45,7 +45,7 @@ enunciado: CRITICAL (segurança grave / God Class), HIGH (violação forte de MV
 | 7 | HIGH | Conexão SQLite global compartilhada entre threads (`check_same_thread=False`) | `database.py:4-11` | Estado global mutável, condições de corrida |
 | 8 | HIGH | Pedido gravado em várias etapas sem transação; quantidade negativa **aumenta** o estoque | `models.py:133-169` | Inconsistência de estoque e financeira |
 | 9 | MEDIUM | N+1: para cada pedido busca itens, para cada item busca o produto | `models.py:171-233` | 1 + N + N·M queries |
-| 10 | MEDIUM | 17 blocos `except Exception: return {"erro": str(e)}, 500` | `controllers.py` | Vaza detalhes internos; erros de entrada viram 500 |
+| 10 | MEDIUM | 17 blocos `except Exception: return {"erro": str(e)}, 500` | `controllers.py` (16) e `app.py` (1) | Vaza detalhes internos; erros de entrada viram 500 |
 | 11 | MEDIUM | Validação duplicada e divergente entre criar/atualizar produto | `controllers.py:28-50` vs `72-90` | Update aceita categoria inválida |
 | 12 | LOW | `print` como log (inclusive e-mails de login) | `controllers.py` (14×), `app.py` | Sem níveis; dados pessoais em stdout |
 | 13 | LOW | Magic numbers de desconto (`10000`, `0.1`, `5000`…) e listas de status/categorias literais | `models.py:257-262`, `controllers.py:52, 242` | Regras de negócio escondidas |
@@ -113,16 +113,16 @@ enunciado: CRITICAL (segurança grave / God Class), HIGH (violação forte de MV
   `project-analysis.md`, a Fase 2 do catálogo + template, a Fase 3 do guideline + playbook + validação.
   Isso mantém o contexto pequeno e permite evoluir o conhecimento sem mexer no fluxo.
 - **Frontmatter:** `disable-model-invocation: true` — uma skill que reescreve o projeto só deve rodar
-  quando o usuário digita `/refactor-arch`, nunca por iniciativa do modelo; `allowed-tools` limita o
-  ferramental; `argument-hint` permite passar o caminho do relatório (`/refactor-arch ../reports/audit-project-1.md`).
+  quando o usuário digita `/refactor-arch`, nunca por iniciativa do modelo; `allowed-tools` pré-autoriza as
+  ferramentas de que a skill precisa (leitura, busca, shell e edição); `argument-hint` permite passar o caminho do relatório (`/refactor-arch ../reports/audit-project-1.md`).
 - **Regras invioláveis explícitas:** Fases 1–2 somente leitura; pausa obrigatória com
   `Proceed with refactoring (Phase 3)? [y/n]` encerrando a resposta; todo finding com `arquivo:linha`;
   contrato público preservado (mudanças só por segurança, listadas); sem novas dependências se a stdlib resolve.
 - **Formatos de saída fixos** (blocos `PHASE 1`, `ARCHITECTURE AUDIT REPORT`, `PHASE 3`) para que o resultado
   seja comparável entre projetos e verificável.
 - **Validação baseada em evidência:** a Fase 3 começa capturando um **baseline** do app original com a mesma
-  spec de smoke test usada depois. Falhas no baseline viram prova dos findings (ex.: bypass de login),
-  e a mesma spec passando 100% depois prova que nada quebrou. O `smoke_test.py` é stdlib pura para rodar
+  spec de smoke test usada depois. Falhas no baseline evidenciam os findings (ex.: bypass de login),
+  e a mesma spec passando depois indica que os casos cobertos continuam respondendo como esperado. O `smoke_test.py` é stdlib pura para rodar
   em qualquer máquina com Python, independentemente da stack do projeto auditado.
 
 ### Catálogo de anti-patterns (25, com severidade distribuída)
@@ -130,7 +130,7 @@ enunciado: CRITICAL (segurança grave / God Class), HIGH (violação forte de MV
 | Severidade | Anti-patterns | Por que entraram |
 |---|---|---|
 | CRITICAL (6) | AP-01 credenciais hardcoded, AP-02 SQL Injection, AP-03 God Class, AP-04 endpoint admin perigoso, AP-05 senha insegura, AP-06 exposição de dados sensíveis | Todos encontrados na análise manual; são os que expõem dados ou impedem qualquer evolução |
-| HIGH (6) | AP-07 Fat Controller, AP-08 estado global mutável, AP-09 acoplamento sem DI, AP-10 debug/config insegura, AP-11 token falso, AP-12 escrita sem transação | Violações MVC/SOLID e de robustez presentes nos 3 projetos |
+| HIGH (6) | AP-07 Fat Controller, AP-08 estado global mutável, AP-09 acoplamento sem DI, AP-10 debug/config insegura, AP-11 token falso, AP-12 escrita sem transação | Violações MVC/SOLID e de robustez encontradas na análise manual (cada uma em pelo menos um dos projetos) |
 | MEDIUM (8) | AP-13 N+1, AP-14 validação ausente, AP-15 duplicação, AP-16 erros descentralizados, **AP-17 APIs deprecated**, AP-18 callback hell, AP-19 dados órfãos, AP-20 responsabilidade no lugar errado | Performance, padronização e integridade |
 | LOW (5) | AP-21 magic numbers, AP-22 nomes ruins, AP-23 print/console.log, AP-24 código morto, AP-25 condicionais verbosas | Legibilidade |
 
@@ -143,8 +143,8 @@ Cada entrada tem **sinais de detecção acionáveis** (ex.: "query dentro de `fo
 - A Fase 1 **detecta** a stack por manifesto + import (tabela para Python, Node, Go, Java, Ruby, PHP) em vez de presumir Flask.
 - Catálogo e playbook descrevem **princípios** com exemplos em Python **e** JavaScript, e instruem a aplicar o equivalente idiomático em outras stacks.
 - As guidelines MVC trazem uma **tabela de adaptação**: monolito → criar a árvore completa; camadas parciais → reaproveitar as pastas existentes e só extrair o que falta; já MVC → só corrigir findings.
-- A validação é por HTTP (black-box), então serve para qualquer framework web.
-- Prova prática: a **mesma** pasta da skill (cópias idênticas, verificadas com `diff -r`) funcionou em Flask+SQL manual, Express+sqlite3 callbacks e Flask+SQLAlchemy.
+- A validação é por HTTP (black-box), independente do framework.
+- Na prática: a **mesma** pasta da skill (cópias idênticas, verificadas com `diff -r`) funcionou em Flask+SQL manual, Express+sqlite3 callbacks e Flask+SQLAlchemy.
 
 ### Desafios encontrados e como resolvi (iterações)
 
@@ -162,7 +162,7 @@ Cada entrada tem **sinais de detecção acionáveis** (ex.: "query dentro de `fo
    manda reaproveitar `models/` e `routes/` (rotas viram views finas) e acrescentar `controllers/`,
    `services/`, `config/`, `middlewares/` — o que manteve `python3 seed.py && python3 app.py` funcionando.
 5. **Hashes legados.** Trocar MD5/texto puro por scrypt quebraria logins em bancos existentes. O playbook P-04
-   inclui migração transparente no primeiro login válido (testado com o banco gerado pela versão antiga do projeto 3).
+   inclui migração transparente no primeiro login válido.
 6. **Ambiente:** não havia `npm` no PATH; as dependências do projeto 2 foram instaladas com `bun install --no-save`
    (sem alterar `package-lock.json`).
 
@@ -178,7 +178,6 @@ Cada entrada tem **sinais de detecção acionáveis** (ex.: "query dentro de `fo
 | 2 — ecommerce-api-legacy | Node.js + Express 4.22.1 | Monolito sem camadas (God Class) | 5 | 4 | 5 | 4 | **18** | nenhuma (verificado) |
 | 3 — task-manager-api | Python + Flask 3.0.0 / Flask-SQLAlchemy 3.1.1 | Camadas parciais | 3 | 3 | 7 | 4 | **17** | `Query.get()` (16×), `datetime.utcnow()` (~20×) |
 
-Todos os critérios de aceite: stack correta (3/3), ≥ 5 findings (3/3), ≥ 1 CRITICAL/HIGH (3/3), app funcionando após a Fase 3 (3/3).
 
 ### Antes × depois
 
@@ -240,6 +239,8 @@ Baseline (apps **originais**) × depois (apps **refatorados**), mesma spec `test
 | 2 | 8/12 | **12/12** | novo usuário sem senha aceito (default `123456`), relatório e delete sem token, delete de inexistente → 200 |
 | 3 | 32/37 | **37/37** | `priority: "alta"` → 500, hash `password` em 4 respostas |
 
+A coluna "Original" foi medida localmente contra o código do repositório base, sem log versionado. A coluna "Refatorado" é reproduzível com os comandos da seção D.
+
 Execução final (boot do zero com o comando de start documentado de cada projeto):
 
 ```
@@ -274,12 +275,7 @@ Trecho do smoke test do projeto 1 refatorado (casos que falhavam no original e a
 36/36 requisições OK
 ```
 
-Verificações adicionais executadas:
-- **Contrato:** comparação automática das chaves JSON de todas as respostas de sucesso baseline × refatorado — idênticas, exceto os campos sensíveis removidos de propósito. No projeto 3 os **valores** (listagens, estatísticas, relatórios) também batem, desconsiderando timestamps.
-- **Boot sem APIs deprecated:** projetos Python sobem com `python3 -W error::DeprecationWarning` (inclusive `seed.py`); projeto 2 com `node --trace-deprecation`, sem avisos.
-- **Re-scan:** greps dos findings CRITICAL/HIGH sem ocorrências (SQL concatenado, segredos, `debug=True`, `except:`, `query.get`, `utcnow`); `pyflakes` sem imports mortos.
-- **Migração de hash:** login com o banco gerado pela versão antiga do projeto 3 (MD5) funciona e regrava o hash como scrypt.
-- Casos de borda: JSON malformado → 400, corpo ausente no login → 400, quantidade negativa no pedido → 400, `priority=x` na busca → 400, cor inválida → 400.
+Além do smoke test, os projetos Python foram iniciados com `python3 -W error::DeprecationWarning` e os greps do catálogo foram refeitos para os findings CRITICAL/HIGH (verificação manual, sem log versionado).
 
 ### Checklist de validação
 
@@ -294,7 +290,7 @@ Verificações adicionais executadas:
 | Ordenado CRITICAL → LOW | ✅ | ✅ | ✅ |
 | Mínimo de 5 findings | ✅ 19 | ✅ 18 | ✅ 17 |
 | Detecção de APIs deprecated (se aplicável) | ✅ verificada, nenhuma | ✅ verificada, nenhuma | ✅ 2 APIs |
-| Pausa e pede confirmação antes da Fase 3 | ✅ | ✅ | ✅ |
+| Pausa e pede confirmação antes da Fase 3 | ⚠️ o relatório termina com a pergunta; a confirmação veio do orquestrador, não de um `y` interativo (ver nota final) | ⚠️ idem | ⚠️ idem |
 | **Fase 3** — Estrutura segue MVC | ✅ | ✅ | ✅ |
 | Config extraída (sem hardcoded) | ✅ `src/config` | ✅ `src/config` | ✅ `config/` |
 | Models abstraem os dados | ✅ | ✅ | ✅ |
@@ -303,7 +299,7 @@ Verificações adicionais executadas:
 | Error handling centralizado | ✅ | ✅ | ✅ |
 | Entry point claro | ✅ `app.py` | ✅ `src/server.js` | ✅ `app.py` |
 | Aplicação inicia sem erros | ✅ | ✅ | ✅ |
-| Endpoints originais respondem | ✅ 36/36 | ✅ 12/12 | ✅ 37/37 |
+| Endpoints originais respondem | ✅ 36/36 requisições (exceto `/admin/query`, removido por segurança) | ✅ 12/12 requisições (rotas admin passaram a exigir token) | ✅ 37/37 requisições |
 
 ### Observações sobre o comportamento em stacks diferentes
 
@@ -318,15 +314,9 @@ Verificações adicionais executadas:
   versões do manifesto, e nos outros dois projetos o relatório registra "none detected" com as versões verificadas).
 - Os mesmos IDs de catálogo (AP-xx) e de playbook (P-xx) aparecem nos três relatórios, o que facilita comparar projetos.
 
-### Mudanças intencionais de contrato (resumo)
+### Mudanças intencionais de contrato
 
-| Projeto | Mudança |
-|---|---|
-| 1 | `POST /admin/query` removido; `/admin/reset-db` exige `X-Admin-Token`; `senha`/`secret_key`/`db_path` saíram das respostas; entradas inválidas → 400/404/409 em vez de 500; e-mail duplicado → 409 |
-| 2 | Relatório financeiro e `DELETE /api/users/:id` exigem `X-Admin-Token`; `pwd` obrigatório para novo usuário; erros em JSON; delete em cascata + 404 |
-| 3 | `password` fora das respostas; token assinado; senha mínima 8; entradas inválidas → 400; delete de categoria desassocia tasks |
-
-Detalhes no README de cada projeto.
+As mudanças de contrato feitas por segurança (ex.: remoção de `/admin/query`, rotas admin com token, senha fora das respostas) estão listadas no README de cada projeto.
 
 ---
 

@@ -37,7 +37,7 @@ Services:
 - `nestjs-api` — NestJS API, port `3000`
 - `db` — PostgreSQL 17, port `5432`, database `streamtube`, user/password `streamtube`
 - `mailpit` — SMTP `1025`, web UI `8025`
-- `minio` — S3-compatible object storage (`pgsty/minio`, the official `minio/minio` image is no longer published), API `9000`, console `9001`, credentials = `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`
+- `minio` — S3-compatible object storage (`pgsty/minio` community build; the `minio/minio` image could not be pulled when this phase was built), API `9000`, console `9001`, credentials = `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY`
 - `minio-init` — one-shot container that creates the private bucket `S3_BUCKET` (`mc mb --ignore-existing`) and exits `0`
 - `redis` — Redis 7.4 (AOF on), port `6379`, backend of the BullMQ queue
 - `worker` — video worker: same image/bind mount as `nestjs-api`, runs `npm run start:worker` (`src/worker.ts`), `restart: unless-stopped`. It shares `node_modules` with the API, so it keeps restarting until `npm install` has been run once

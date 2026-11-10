@@ -1,9 +1,12 @@
 # ADR-001 — Outbox transacional no MySQL existente
 
-- **Status:** Aceito
 - **Data da decisão:** reunião técnica de webhooks (decisão fechada em `[09:08] Larissa`)
 - **Decisores:** Larissa (Tech Lead), Diego (Plataforma), Bruno (Pedidos)
 - **Relacionados:** [RFC](../RFC.md) · [FDD §5.1](../FDD.md#51-fluxo-1--criação-do-evento-na-outbox) · [ADR-002](ADR-002-worker-separado-com-polling.md) · [ADR-007](ADR-007-snapshot-do-payload-e-filtro-na-insercao.md)
+
+## Status
+
+Aceito
 
 ## Contexto
 

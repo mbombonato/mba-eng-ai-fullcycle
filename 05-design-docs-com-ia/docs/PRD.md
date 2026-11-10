@@ -6,7 +6,7 @@
 | **PM responsável** | Marcos (Product Manager) |
 | **Tech Lead** | Larissa |
 | **Autor do documento** | Matheus Bombonato |
-| **Status** | Aprovado em reunião técnica; em detalhamento técnico |
+| **Status** | Rascunho: escopo definido na reunião técnica; aguardando revisão |
 | **Documentos relacionados** | [RFC](RFC.md) · [FDD](FDD.md) · [ADRs](adrs/README.md) · [Tracker](TRACKER.md) |
 
 ## 1. Resumo e contexto da feature
@@ -35,8 +35,8 @@ A demanda veio formalmente de três clientes B2B — **Atlas Comercial, MaxDistr
 
 | ID | Cenário |
 | --- | --- |
-| PRD-CEN-01 | A Atlas cadastra um endpoint `https` e escolhe ser avisada apenas quando o pedido vira `SHIPPED` e `DELIVERED` (`[09:33] Marcos`). Quando um operador marca um pedido como enviado, o sistema da Atlas recebe o aviso em poucos segundos. |
-| PRD-CEN-02 | O sistema da Nova Cargo fica 2 horas fora do ar para manutenção planejada. As notificações do período são reenviadas automaticamente quando ele volta (`[09:16] Diego`). |
+| PRD-CEN-01 | Um cliente cadastra um endpoint `https` e escolhe ser avisada apenas quando o pedido vira `SHIPPED` e `DELIVERED` (`[09:33] Marcos`). Quando um operador marca um pedido como enviado, o sistema do cliente recebe o aviso em poucos segundos. |
+| PRD-CEN-02 | O sistema de um cliente fica 2 horas fora do ar para manutenção planejada. As notificações do período são reenviadas automaticamente quando ele volta (`[09:16] Diego`). |
 | PRD-CEN-03 | Um cliente reclama que "não recebeu" um aviso; o suporte consulta o histórico das últimas entregas daquele webhook, com sucesso/falha e tempo de resposta (`[09:34] Marcos`). |
 | PRD-CEN-04 | Um cliente vaza sua secret num log; ele pede uma nova secret pela API e tem 24 horas para trocar nos seus sistemas sem perder notificações (`[09:21] Sofia`, `[09:22] Diego`). |
 | PRD-CEN-05 | Uma notificação esgota todas as tentativas; um administrador a reenvia manualmente depois que o cliente corrige o problema (`[09:18] Diego`). |

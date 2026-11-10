@@ -1,7 +1,7 @@
 ---
 libs:
   bullmq:
-    version: "^5.81.x"
+    version: "~5.81.5"
     context7_id: "n/a — official docs (docs.bullmq.io) + GitHub changelog"
     fetched_at: "2026-11-09T16:40:00-03:00"
   "@nestjs/bullmq":
@@ -9,11 +9,11 @@ libs:
     context7_id: "n/a — official docs (docs.nestjs.com/techniques/queues)"
     fetched_at: "2026-11-09T16:42:00-03:00"
   "@aws-sdk/client-s3":
-    version: "^3.1156.0"
+    version: "~3.1156.0"
     context7_id: "n/a — AWS SDK for JavaScript v3 developer guide / API reference"
     fetched_at: "2026-11-09T16:44:00-03:00"
   "@aws-sdk/s3-request-presigner":
-    version: "^3.1156.0"
+    version: "~3.1156.0"
     context7_id: "n/a — AWS SDK for JavaScript v3 API reference"
     fetched_at: "2026-11-09T16:44:00-03:00"
 sources_mtime:
@@ -22,11 +22,11 @@ sources_mtime:
 
 # phase-03-videos — Library References
 
-Distilled docs for the libraries decided in this phase. **Note on the source:** the context7 MCP server is not configured in this workspace (`.mcp.json` lists only `postgres`), so the official documentation pages and changelogs were consulted directly, and versions/peer ranges were read from the npm registry (`npm view`) inside the `nestjs-api` container. Versions pinned are ≥ 2 weeks old at the time of the decision.
+Distilled docs for the libraries decided in this phase. **Note on the source:** the context7 MCP server is not configured in this workspace (`.mcp.json` lists only `postgres`), so the official documentation pages and changelogs were consulted directly, and versions/peer ranges were read from the npm registry (`npm view`) inside the `nestjs-api` container.
 
 ## bullmq
 
-**Version decision:** `^5.81.x` (latest 5.x: 5.81.5, 2026-09-10). The 6.0.0 major (2026-07-30) lists breaking changes — `Connection` constructor parameter replaced by `BackendFactory`, `Queue#client`/`Worker#blockingClient` removed, `ioredis` turned into an optional peer that must be installed explicitly, `Job#discard()` removed in favour of `UnrecoverableError`. The 5.x line is the one the NestJS recipe documents and avoids the extra peer.
+**Version decision:** `~5.81.5` (latest 5.x: 5.81.5, 2026-09-10). The 6.0.0 major (2026-07-30) lists breaking changes — `Connection` constructor parameter replaced by `BackendFactory`, `Queue#client`/`Worker#blockingClient` removed, `ioredis` turned into an optional peer that must be installed explicitly, `Job#discard()` removed in favour of `UnrecoverableError`. The 5.x line is the one the NestJS recipe documents and avoids the extra peer.
 
 APIs used in this phase:
 
@@ -74,7 +74,7 @@ export class VideoProcessor extends WorkerHost {
 
 ## @aws-sdk/client-s3
 
-**Version decision:** `^3.1156.0` (2026-10-22).
+**Version decision:** `~3.1156.0` (2026-10-22).
 
 ```typescript
 const client = new S3Client({

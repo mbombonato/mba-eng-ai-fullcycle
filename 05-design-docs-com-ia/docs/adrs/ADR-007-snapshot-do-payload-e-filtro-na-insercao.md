@@ -1,9 +1,12 @@
 # ADR-007 — Payload enxuto renderizado como snapshot e filtro de eventos na inserção da outbox
 
-- **Status:** Aceito
 - **Data da decisão:** reunião técnica de webhooks (decisões fechadas em `[09:34] Bruno`, `[09:44] Bruno` e `[09:52] Bruno`)
 - **Decisores:** Larissa (Tech Lead), Diego (Plataforma), Bruno (Pedidos), Marcos (Produto)
 - **Relacionados:** [RFC](../RFC.md) · [FDD §5.1 e §6.8](../FDD.md#51-fluxo-1--criação-do-evento-na-outbox) · [ADR-001](ADR-001-outbox-transacional-no-mysql.md)
+
+## Status
+
+Aceito
 
 ## Contexto
 

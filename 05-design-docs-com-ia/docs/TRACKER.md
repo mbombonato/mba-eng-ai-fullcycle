@@ -4,7 +4,7 @@ Cada linha liga um item identificado nos documentos (`PRD`, `RFC`, `FDD`, `ADRs`
 
 Os IDs `ADR-NNN-ALT-NN` e `ADR-NNN-CONS-NN` seguem a ordem das linhas da tabela de alternativas e dos blocos de consequências de cada ADR.
 
-Itens marcados como "proposta de implementação" no FDD também aparecem aqui, ligados à fala ou ao arquivo de onde foram derivados.
+Itens marcados como "proposta de implementação" no FDD também aparecem aqui com "(proposta)" no Tipo. Nesses casos a fala ou o arquivo citado é apenas o contexto de onde o item foi derivado: a regra em si não foi decidida na reunião.
 
 | ID | Documento | Tipo | Conteúdo (resumo) | Fonte | Localização |
 | --- | --- | --- | --- | --- | --- |
@@ -204,16 +204,16 @@ Itens marcados como "proposta de implementação" no FDD também aparecem aqui, 
 | FDD-ERR-01 | `docs/FDD.md` | Erro | `WEBHOOK_NOT_FOUND` (404) | TRANSCRICAO | [09:28] Bruno |
 | FDD-ERR-02 | `docs/FDD.md` | Erro | `WEBHOOK_INVALID_URL` (400) | TRANSCRICAO | [09:23] Sofia |
 | FDD-ERR-03 | `docs/FDD.md` | Erro | `WEBHOOK_CUSTOMER_NOT_FOUND` (404) | CODIGO | `src/modules/orders/order.service.ts` |
-| FDD-ERR-04 | `docs/FDD.md` | Erro | `WEBHOOK_SECRET_ROTATION_IN_PROGRESS` (409) | TRANSCRICAO | [09:21] Sofia |
+| FDD-ERR-04 | `docs/FDD.md` | Erro (proposta) | `WEBHOOK_SECRET_ROTATION_IN_PROGRESS` (409) | TRANSCRICAO | [09:21] Sofia |
 | FDD-ERR-05 | `docs/FDD.md` | Erro | `WEBHOOK_DEAD_LETTER_NOT_FOUND` (404) | TRANSCRICAO | [09:18] Diego |
-| FDD-ERR-06 | `docs/FDD.md` | Erro | `WEBHOOK_DEAD_LETTER_ALREADY_REPLAYED` (409) | TRANSCRICAO | [09:35] Diego |
+| FDD-ERR-06 | `docs/FDD.md` | Erro (proposta) | `WEBHOOK_DEAD_LETTER_ALREADY_REPLAYED` (409) | TRANSCRICAO | [09:35] Diego |
 | FDD-ERR-07 | `docs/FDD.md` | Erro | `WEBHOOK_OUTBOX_INSERT_FAILED` (500, rollback) | TRANSCRICAO | [09:40] Bruno |
 | FDD-ERR-08 | `docs/FDD.md` | Erro | `WEBHOOK_DELIVERY_TIMEOUT` | TRANSCRICAO | [09:42] Diego |
 | FDD-ERR-09 | `docs/FDD.md` | Erro | `WEBHOOK_DELIVERY_FAILED` (não-2xx) | TRANSCRICAO | [09:15] Diego |
 | FDD-ERR-10 | `docs/FDD.md` | Erro | `WEBHOOK_DELIVERY_NETWORK_ERROR` | TRANSCRICAO | [09:14] Larissa |
 | FDD-ERR-11 | `docs/FDD.md` | Erro | `WEBHOOK_PAYLOAD_TOO_LARGE` | TRANSCRICAO | [09:24] Larissa |
 | FDD-ERR-12 | `docs/FDD.md` | Erro | `WEBHOOK_SECRET_REQUIRED` | TRANSCRICAO | [09:28] Bruno |
-| FDD-ERR-13 | `docs/FDD.md` | Erro | `WEBHOOK_ENDPOINT_INACTIVE` | TRANSCRICAO | [09:21] Bruno |
+| FDD-ERR-13 | `docs/FDD.md` | Erro (proposta) | `WEBHOOK_ENDPOINT_INACTIVE` | TRANSCRICAO | [09:21] Bruno |
 | FDD-ERR-14 | `docs/FDD.md` | Erro | `WEBHOOK_MAX_ATTEMPTS_EXCEEDED` | TRANSCRICAO | [09:15] Diego |
 | FDD-OBS-01 | `docs/FDD.md` | Observabilidade (log) | Logs de start/stop do worker | CODIGO | `src/server.ts` |
 | FDD-OBS-02 | `docs/FDD.md` | Observabilidade (log) | Log por tentativa de entrega | TRANSCRICAO | [09:34] Marcos |
@@ -276,4 +276,4 @@ Itens marcados como "proposta de implementação" no FDD também aparecem aqui, 
 | FDD-RISK-03 | `docs/FDD.md` | Risco | Crescimento das tabelas | TRANSCRICAO | [09:07] Bruno |
 | FDD-RISK-04 | `docs/FDD.md` | Risco | Secret exposta | TRANSCRICAO | [09:22] Diego |
 | FDD-RISK-05 | `docs/FDD.md` | Risco | Consulta extra na transação de `changeStatus` | CODIGO | `src/modules/orders/order.service.ts` |
-| FDD-RISK-06 | `docs/FDD.md` | Risco | Cliente lento atrasa o lote sequencial | TRANSCRICAO | [09:04] Bruno |
+| FDD-RISK-06 | `docs/FDD.md` | Risco (proposta) | Cliente lento atrasa o lote sequencial | TRANSCRICAO | [09:04] Bruno |

@@ -24,6 +24,7 @@ F1-Score, Clarity e Precision), exigindo nota ≥ 0.8 em todas.
 │   ├── evaluate.py               # Avaliação (pronto, não alterado)
 │   ├── metrics.py                # Métricas LLM-as-Judge (pronto, não alterado)
 │   └── utils.py                  # Funções auxiliares (pronto, não alterado)
+├── scripts/eval_local.py         # Medição local não oficial (usada para o v1 e para iterar)
 └── tests/test_prompts.py         # Testes de validação do prompt v2
 ```
 
@@ -33,13 +34,13 @@ F1-Score, Clarity e Precision), exigindo nota ≥ 0.8 em todas.
 
 ### Diagnóstico do prompt v1
 
-| Problema no v1 | Efeito nas métricas |
+| Problema no v1 | Risco |
 |---|---|
 | `{bug_report}` duplicado no system **e** no user prompt | Ruído e repetição de contexto; mistura instrução com dado |
 | Persona genérica ("assistente que ajuda...") | Saída sem vocabulário de backlog ágil |
-| Nenhum formato de saída definido | Respostas com estrutura variável → Clarity baixa |
-| Nenhum exemplo | O modelo não sabe o nível de detalhe esperado → F1 (recall) baixo |
-| Sem regras contra invenção de fatos | Alucinações → Precision baixa |
+| Nenhum formato de saída definido | Respostas com estrutura variável |
+| Nenhum exemplo | O modelo não sabe o nível de detalhe esperado, o que afeta o F1 (na medição, a única métrica abaixo de 0.8 no v1) |
+| Sem regras contra invenção de fatos | Alucinações |
 | Sem tratamento de casos especiais | Relatos complexos (vários problemas) ficam parcialmente cobertos |
 
 ### Como o avaliador pontua (o que guiou a otimização)
@@ -57,7 +58,7 @@ Lendo `src/evaluate.py` e `src/metrics.py`:
   exposto, saudação ou comentário extra entra na avaliação e derruba Clarity/Precision.
 
 Analisando o dataset, as referências seguem três padrões bem definidos conforme a
-complexidade do bug, e o prompt v2 foi calibrado exatamente para eles:
+complexidade do bug, e os esqueletos de saída do v2 seguem esses três padrões:
 
 - **Simples**: frase "Como um ..., eu quero ..., para que ..." + `Critérios de Aceitação:`
   com 5 linhas Dado/Quando/Então/E.
@@ -70,7 +71,7 @@ complexidade do bug, e o prompt v2 foi calibrado exatamente para eles:
 ### 1. Role Prompting
 
 **Por quê:** uma persona experiente define vocabulário (backlog, critérios testáveis),
-tom profissional e postura crítica (não inventar fatos), o que melhora Clarity e Precision.
+tom profissional e postura crítica (não inventar fatos).
 
 **Como apliquei:**
 > "Você é um Product Manager Sênior com 10 anos de experiência em times ágeis (Scrum/Kanban),
@@ -79,11 +80,11 @@ tom profissional e postura crítica (não inventar fatos), o que melhora Clarity
 
 ### 2. Few-shot Learning (obrigatória)
 
-**Por quê:** é a forma mais eficaz de ancorar **formato e nível de detalhe**. Como o F1
+**Por quê:** exemplos ancoram **formato e nível de detalhe**. Como o F1
 compara com referências que mudam de forma conforme a complexidade, um exemplo por nível
 ensina ao modelo quando parar (bug simples) e quando expandir (bug complexo).
 
-**Como apliquei:** 3 exemplos de entrada/saída **inéditos** (não copiados do dataset),
+**Como apliquei:** 3 exemplos de entrada/saída próprios (não copiados do dataset),
 em domínios diferentes dos avaliados:
 
 1. *Simples* — link "Esqueci minha senha" que não abre (só story + 5 critérios).
@@ -106,8 +107,8 @@ completude → escolha do esqueleto — e a regra explícita
 
 ### 4. Skeleton of Thought
 
-**Por quê:** respostas com estrutura previsível pontuam melhor em Clarity e facilitam o
-juiz encontrar as informações da referência (F1). Esqueletos proporcionais evitam
+**Por quê:** uma estrutura previsível facilita ao juiz encontrar as informações da
+referência (F1). Esqueletos proporcionais evitam
 "inflar" bugs simples (o que derrubaria Precision/concisão).
 
 **Como apliquei:** três esqueletos de saída (SIMPLES, MÉDIA, COMPLEXA), com os mesmos
@@ -122,9 +123,11 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
   não inventar fatos, linguagem positiva, concisão, Markdown simples, pt-BR.
 - **Checklist de completude por tipo de bug**: para cada tipo de defeito (ação de UI,
   validação de formulário, compatibilidade, métricas, webhook, performance, controle de
-  acesso, modal, estoque, lista mobile), os critérios que um PM experiente sempre cobre
+  acesso, modal, layout/responsividade, estoque, lista mobile), os critérios esperados
   (ex.: controle de acesso → 403, acesso só aos próprios dados, admins e log de auditoria).
-  Foi o que mais elevou o recall do F1 sem inventar fatos sobre o relato.
+  **Ressalva:** o checklist foi derivado dos padrões das referências do próprio dataset de
+  avaliação, ou seja, é um ajuste ao conjunto avaliado e não foi testado em bugs fora dele.
+  Com gpt-4o, o F1 foi de 0.78 (sem checklist) para 0.87 (com checklist).
 - **Edge cases**: relato vago (gera story + "Pontos a Esclarecer"), relato vazio/sem
   sentido, pedido de feature disfarçado de bug, vários problemas no mesmo relato,
   dados sensíveis (não reproduzir) e prompt injection no relato (tratar como dado).
@@ -153,6 +156,12 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 ![Experimento no LangSmith](docs/experiment_v2.png)
 
+**Tracing detalhado de 3 exemplos** (entrada, chamada ao modelo, saída e notas de cada run):
+
+![Trace 1: webhook de pagamento](docs/trace_1.png)
+![Trace 2: endpoint sem validação de permissão](docs/trace_2.png)
+![Trace 3: relatório de vendas lento](docs/trace_3.png)
+
 **Histórico dos 4 experimentos** (uma linha por iteração; o #4 é o aprovado):
 
 ![Histórico de experimentos](docs/experiments_history.png)
@@ -174,26 +183,31 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 Provider/modelos usados: `LLM_PROVIDER=openai` / `LLM_MODEL=gpt-4o` / `EVAL_MODEL=gpt-4o` (temperature 0).
 
-> As notas do v2 vêm do `python3 src/evaluate.py` oficial. As do v1 foram medidas com as
-> **mesmas funções** de `src/metrics.py`, os mesmos 15 exemplos e os mesmos modelos, por um
-> script local que monta o v1 de `prompts/bug_to_user_story_v1.yml`. Assim o v2 público no
-> Hub não precisou ser sobrescrito. O ganho se concentra no **F1-Score** (+0.08), a única
-> métrica que reprovava o v1: ele mede quanto da referência é coberto sem sobrar informação.
+> As notas do v2 vêm do `python3 src/evaluate.py` oficial. As do v1 vêm de uma medição
+> local, sem experimento no LangSmith: `python3 scripts/eval_local.py prompts/bug_to_user_story_v1.yml`,
+> que usa as mesmas funções de `src/metrics.py`, os mesmos 15 exemplos e os mesmos modelos.
+> Assim o v2 público no Hub não precisou ser sobrescrito. O juiz é um LLM e as notas variam
+> alguns centésimos entre execuções. A diferença relevante está no **F1-Score** (0.79 → 0.87),
+> a única métrica abaixo de 0.8 no v1; Clarity e Precision ficaram praticamente iguais.
 
 ### Histórico de iterações
 
 | Iteração | Mudança no prompt | Métrica mais baixa | Resultado |
 |---|---|---|---|
 | 1 | Versão inicial descrita acima (gpt-4o-mini gerando) | F1 0.76 | Reprovado. O modelo tratava bugs médios como complexos (blocos `===` e Tasks) e adicionava seções a bugs simples |
-| 2 | Árvore de decisão explícita para a complexidade ("passos de um fluxo NÃO tornam o bug complexo"), "em bugs SIMPLES a resposta termina aqui" e proibição de `===`/Tasks em bugs médios | F1 0.79 | Reprovado por pouco, com menos excesso de informação |
-| 3 | **Checklist de completude por tipo de bug** (UI, validação, compatibilidade, métricas, webhook, performance, controle de acesso, modal, estoque, lista mobile) ligado ao CoT; a meta de performance nunca é o valor atual do bug; "Pontos a Esclarecer" só em relatos realmente vagos | F1 ≈ 0.79–0.80 (gpt-4o-mini) | No limite: o gpt-4o-mini ignorava parte das instruções longas |
-| 4 | Mesmo prompt, com `LLM_MODEL=gpt-4o` (melhor *instruction following*; o desafio deixa a escolha de modelo livre) | F1 0.87 | ✅ **Aprovado**: todas as métricas ≥ 0.8 |
+| 2 | Árvore de decisão explícita para a complexidade ("passos de um fluxo NÃO tornam o bug complexo"), "em bugs SIMPLES a resposta termina aqui" e proibição de `===`/Tasks em bugs médios (gpt-4o-mini) | F1 0.79 | Reprovado |
+| 3 | Mesmo prompt da iteração 2, trocando `LLM_MODEL` para gpt-4o (o desafio deixa a escolha de modelo livre) | F1 0.78 | Reprovado: a troca de modelo sozinha não resolveu |
+| 4 | **Checklist de completude por tipo de bug** ligado ao CoT; a meta de performance nunca é o valor atual do bug; "Pontos a Esclarecer" só em relatos realmente vagos (gpt-4o) | F1 0.87 | ✅ Aprovado: todas as métricas ≥ 0.8 |
+
+As quatro linhas correspondem aos experimentos #1 a #4 do LangSmith. Entre a 2 e a 4, o
+checklist também foi medido localmente com gpt-4o-mini (`scripts/eval_local.py`, sem
+experimento no LangSmith) e ficou em F1 ≈ 0.79–0.80, por isso a combinação final usa gpt-4o.
 
 ### Comparação v1 × v2: o que mudou e por quê
 
 | Aspecto | v1 | v2 | Por quê |
 |---|---|---|---|
-| Persona | "assistente que ajuda" | Product Manager Sênior em times ágeis | Vocabulário e rigor de backlog (Clarity/Precision) |
+| Persona | "assistente que ajuda" | Product Manager Sênior em times ágeis | Vocabulário e rigor de backlog |
 | Separação system/user | `{bug_report}` nos dois | Instruções no system, relato só no user | Separa instrução de dado; evita repetição |
 | Formato | Nenhum | Template "Como um / eu quero / para que" + Dado/Quando/Então | Estrutura igual à das referências (F1/Clarity) |
 | Profundidade | Indefinida | 3 esqueletos por complexidade | Cobertura proporcional: recall em bugs complexos sem inflar os simples |

@@ -1,9 +1,12 @@
 # ADR-005 — Garantia de entrega at-least-once com deduplicação por `X-Event-Id`
 
-- **Status:** Aceito
 - **Data da decisão:** reunião técnica de webhooks (decisão fechada em `[09:26] Larissa`)
 - **Decisores:** Diego (Plataforma), Larissa (Tech Lead), Sofia (Segurança), Marcos (Produto)
 - **Relacionados:** [RFC](../RFC.md) · [FDD §6.8](../FDD.md#68-contrato-de-saída-requisição-enviada-ao-cliente) · [ADR-001](ADR-001-outbox-transacional-no-mysql.md) · [ADR-003](ADR-003-retry-com-backoff-exponencial-e-dlq.md)
+
+## Status
+
+Aceito
 
 ## Contexto
 
