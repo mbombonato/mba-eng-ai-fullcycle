@@ -139,18 +139,27 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 - **Link público do dataset de avaliação (com experimentos):** https://smith.langchain.com/public/878d617f-58e6-4e14-ad19-d18fae635d70/d
 - **Prompt público no Hub:** https://smith.langchain.com/hub/mbombonato/bug_to_user_story_v2
-- **Experimento aprovado:** `mbombonato-bug_to_user_story_v2-f0ee0c98` (15 runs com tracing completo de
-  entrada, prompt e saída, e as 5 notas gravadas como feedback em cada run)
+- **Experimento aprovado (tracing das 15 runs):** [`mbombonato-bug_to_user_story_v2-f0ee0c98`](https://smith.langchain.com/public/878d617f-58e6-4e14-ad19-d18fae635d70/d/compare?selectedSessions=c15e56c8-13ed-40ab-885a-870385d25e9a).
+  Em cada run aparecem a entrada, a referência, a saída gerada e as 5 notas gravadas como feedback.
 - **Saída completa do terminal:** [`docs/evaluate_v2_output.txt`](docs/evaluate_v2_output.txt)
 
 ### Screenshots
 
-> TODO: salvar as imagens em `docs/` (a pasta `screenshots/` está no `.gitignore`)
-> e referenciar aqui.
+**Avaliação v2 aprovada** (saída do `python src/evaluate.py`, todas as métricas ≥ 0.8):
 
-- `TODO: ![Avaliação v2 aprovada](docs/evaluate_v2.png)` — saída do terminal com todas as métricas ≥ 0.8
-- `TODO: ![Experimento no LangSmith](docs/experiment_v2.png)` — dashboard do experimento
-- `TODO: ![Dataset com 15 exemplos](docs/dataset.png)`
+![Avaliação v2 aprovada](docs/evaluate_v2.png)
+
+**Experimento aprovado no LangSmith**: as 15 runs com entrada, referência, saída gerada e as 5 notas:
+
+![Experimento no LangSmith](docs/experiment_v2.png)
+
+**Histórico dos 4 experimentos** (uma linha por iteração; o #4 é o aprovado):
+
+![Histórico de experimentos](docs/experiments_history.png)
+
+**Dataset de avaliação com os 15 exemplos:**
+
+![Dataset com 15 exemplos](docs/dataset.png)
 
 ### Notas obtidas
 
