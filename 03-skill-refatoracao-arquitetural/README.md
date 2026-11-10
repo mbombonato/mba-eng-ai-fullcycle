@@ -384,3 +384,9 @@ Os relatórios e refatorações deste repositório foram produzidos por um agent
 `SKILL.md` literalmente (fases, formatos, referências e validação). A pausa da Fase 2 foi respeitada — o
 relatório termina com a pergunta de confirmação — e a autorização para a Fase 3 veio da instrução do
 orquestrador da tarefa, não de um `y` digitado interativamente.
+
+Em 2026-11-10 a skill foi invocada de forma interativa (`/refactor-arch`) no `code-smells-project/` já
+refatorado. Ela executou as Fases 1 e 2, gravou `reports/audit-code-smells-project.md` (10 findings
+residuais) e parou na pergunta de confirmação. A resposta foi `n`, e nenhum arquivo do projeto foi
+alterado. Essa execução mostra a pausa com um humano; não substitui os relatórios `audit-project-{1,2,3}.md`,
+que são os do código original.
