@@ -2,27 +2,33 @@
 libs:
   bullmq:
     version: "~5.81.5"
-    context7_id: "n/a — official docs (docs.bullmq.io) + GitHub changelog"
-    fetched_at: "2026-11-09T16:40:00-03:00"
+    context7_id: "/taskforcesh/bullmq"
+    fetched_at: "2026-11-09T23:40:00-03:00"
   "@nestjs/bullmq":
     version: "^11.0.5"
-    context7_id: "n/a — official docs (docs.nestjs.com/techniques/queues)"
-    fetched_at: "2026-11-09T16:42:00-03:00"
+    context7_id: "/nestjs/docs.nestjs.com"
+    fetched_at: "2026-11-09T23:40:00-03:00"
   "@aws-sdk/client-s3":
     version: "~3.1156.0"
-    context7_id: "n/a — AWS SDK for JavaScript v3 developer guide / API reference"
-    fetched_at: "2026-11-09T16:44:00-03:00"
+    context7_id: "/websites/aws_amazon_awsjavascriptsdk_v3"
+    fetched_at: "2026-11-09T23:40:00-03:00"
   "@aws-sdk/s3-request-presigner":
     version: "~3.1156.0"
-    context7_id: "n/a — AWS SDK for JavaScript v3 API reference"
-    fetched_at: "2026-11-09T16:44:00-03:00"
+    context7_id: "/aws/aws-sdk-js-v3"
+    fetched_at: "2026-11-09T23:40:00-03:00"
 sources_mtime:
-  docs/decisions/technical-decisions-phase-03-videos.md: "2026-11-09T16:41:00-03:00"
+  docs/decisions/technical-decisions-phase-03-videos.md: "2026-11-09T23:39:33-03:00"
 ---
 
 # phase-03-videos — Library References
 
-Distilled docs for the libraries decided in this phase. **Note on the source:** the context7 MCP server is not configured in this workspace (`.mcp.json` lists only `postgres`), so the official documentation pages and changelogs were consulted directly, and versions/peer ranges were read from the npm registry (`npm view`) inside the `nestjs-api` container.
+Distilled docs for the libraries decided in this phase.
+
+**Note on the source.** During planning and implementation the context7 MCP server was not configured in this workspace (`.mcp.json` lists only `postgres`), so the official documentation pages and changelogs were consulted directly, and versions/peer ranges were read from the npm registry (`npm view`) inside the `nestjs-api` container. After the implementation, the APIs below were re-checked against context7 through its HTTP API (`context7.com/api/v1`, library IDs in the front matter):
+
+- **Confirmed in context7:** BullMQ `attempts` + exponential `backoff`, `UnrecoverableError`, custom `jobId`, `removeOnComplete`/`removeOnFail`, `attemptsMade`; NestJS `BullModule.forRootAsync`, `registerQueue`, `@InjectQueue`, `@Processor` + `WorkerHost` with dispatch by `job.name`; AWS SDK v3 `CreateMultipartUpload`/`UploadPart`/`CompleteMultipartUpload`/`AbortMultipartUpload`/`HeadObject`/`PutObject`/`DeleteObject` commands and `getSignedUrl(..., { expiresIn })`.
+- **Not found in the context7 snippets** (confirmed only in the installed SDK typings, `@aws-sdk/client-s3/dist-types`, and exercised by the e2e tests against MinIO): `forcePathStyle`, `requestChecksumCalculation` / `responseChecksumValidation: 'WHEN_REQUIRED'`.
+- No divergence was found between context7 and what had been implemented.
 
 ## bullmq
 

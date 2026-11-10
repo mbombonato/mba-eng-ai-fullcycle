@@ -3,8 +3,8 @@ kind: phase
 name: phase-03-videos
 sources_mtime:
   docs/project-plan.md: "2026-11-09T16:25:30-03:00"
-  docs/decisions/technical-decisions-phase-03-videos.md: "2026-11-09T16:52:00-03:00"
-  docs/phases/phase-03-videos/context.md: "2026-11-09T16:52:00-03:00"
+  docs/decisions/technical-decisions-phase-03-videos.md: "2026-11-09T23:39:33-03:00"
+  docs/phases/phase-03-videos/context.md: "2026-11-09T23:54:52-03:00"
   docs/phases/phase-03-videos/validation.md: "2026-11-09T16:47:00-03:00"
   docs/phases/phase-03-videos/library-refs.md: "2026-11-09T16:45:00-03:00"
 ---

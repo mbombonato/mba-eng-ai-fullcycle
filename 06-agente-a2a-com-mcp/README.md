@@ -19,6 +19,7 @@ Nenhum SDK de LLM: o agente interpreta um pedido em formato fixo e decide por re
 ## Como rodar
 
 Pré-requisitos: Python 3.11 ou superior e [uv](https://docs.astral.sh/uv/) (há uma alternativa com `pip` logo abaixo).
+O piso é 3.11 porque o `starlette==1.10.0` usado pelo agente não instala em 3.10; com `uv`, o interpretador certo é baixado automaticamente.
 O validador roda com o `python3` do sistema (3.10+), sem dependências.
 
 **1. Clonar e gerar a chave de integridade do `requestState`** (uma vez):

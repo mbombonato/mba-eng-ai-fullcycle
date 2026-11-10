@@ -4,9 +4,8 @@ name: phase-03-videos
 status: clean
 issue_count: 0
 sources_mtime:
-  docs/phases/phase-03-videos/context.md: "2026-11-09T16:46:00-03:00"
-  docs/decisions/technical-decisions-phase-03-videos.md: "2026-11-09T16:41:00-03:00"
-  docs/phases/phase-03-videos/library-refs.md: "2026-11-09T16:45:00-03:00"
+  docs/phases/phase-03-videos/context.md: "2026-11-09T23:54:52-03:00"
+  docs/decisions/technical-decisions-phase-03-videos.md: "2026-11-09T23:39:33-03:00"
 issues: []
 advisories:
   - id: ADV-1
@@ -49,9 +48,9 @@ _None._ (`next-frontend/` deferred for this phase — see context.md § Non-UI /
 
 ## Resolved Issues
 
-Validation ran twice. First run (`status: dirty`, 4 issues) → `plan-resolve` → second run (`status: clean`).
+Revalidated on 2026-11-09 against the final artifacts (checks 1 to 7 of `plan-validate`): no open issue. The four issues below were found and resolved during planning; their resolutions are still reflected in TD-08, TD-03, TD-04 and TD-07.
 
-| ID | Category | Finding (run 1) | Resolution |
+| ID | Category | Finding | Resolution |
 |----|----------|-----------------|------------|
 | MD-1 | Missing Decision | Public `GET /videos/:slug` must let the owner see `draft`/`processing`/`failed` videos, but the global `JwtAuthGuard` (`phase-02-auth/TD-02`) skips token decoding on `@Public()` routes — no decision defined how a public handler identifies the owner. | New `phase-03-videos/TD-08` (Option A — optional authentication on `@Public()` routes) added to the decisions doc; context.md Decisions Index and Capability Coverage updated. |
 | ICC-1 | Inherited Constraint Conflict | `CLAUDE.md` requires Compose service names as hosts (`minio:9000`), but presigned URLs handed to browsers must use a host-reachable address; signing with `minio:9000` would produce URLs the client cannot open, and rewriting the host breaks the SigV4 signature. | Clarified in `phase-03-videos/TD-03`: server-to-server calls use `S3_ENDPOINT=http://minio:9000` (rule respected); a separate presign client signs with `S3_PUBLIC_ENDPOINT` (client-facing address). Tests running inside the Compose network sign with `http://minio:9000`. |
