@@ -10,11 +10,11 @@ Itens marcados como "proposta de implementação" no FDD também aparecem aqui c
 | --- | --- | --- | --- | --- | --- |
 | PRD-CEN-01 | `docs/PRD.md` | Cenário de uso | Cliente filtra notificações para `SHIPPED` e `DELIVERED` | TRANSCRICAO | [09:33] Marcos |
 | PRD-CEN-02 | `docs/PRD.md` | Cenário de uso | Indisponibilidade de 2 h do cliente coberta por retry | TRANSCRICAO | [09:16] Diego |
-| PRD-CEN-03 | `docs/PRD.md` | Cenário de uso | Suporte consulta histórico das últimas entregas | TRANSCRICAO | [09:34] Marcos |
+| PRD-CEN-03 | `docs/PRD.md` | Cenário de uso | Cliente consulta o histórico das últimas entregas | TRANSCRICAO | [09:34] Marcos |
 | PRD-CEN-04 | `docs/PRD.md` | Cenário de uso | Cliente vaza secret e rotaciona com 24 h de convivência | TRANSCRICAO | [09:22] Diego |
 | PRD-CEN-05 | `docs/PRD.md` | Cenário de uso | ADMIN reprocessa notificação da DLQ | TRANSCRICAO | [09:18] Diego |
-| PRD-OBJ-01 | `docs/PRD.md` | Objetivo / métrica | p95 < 10 s entre mudança de status e 1ª tentativa | TRANSCRICAO | [09:02] Marcos |
-| PRD-OBJ-02 | `docs/PRD.md` | Objetivo / métrica | 3 de 3 clientes (Atlas, MaxDistribuição, Nova Cargo) ativos até fim de novembro | TRANSCRICAO | [09:45] Marcos |
+| PRD-OBJ-01 | `docs/PRD.md` | Objetivo / métrica | < 10 s entre mudança de status e 1ª tentativa (o percentil p95 é proposta) | TRANSCRICAO | [09:02] Marcos |
+| PRD-OBJ-02 | `docs/PRD.md` | Objetivo / métrica | 3 de 3 clientes ativos; fim de novembro é o prazo pedido pela Atlas | TRANSCRICAO | [09:45] Marcos |
 | PRD-OBJ-03 | `docs/PRD.md` | Objetivo / métrica | Zero mudanças de status sem evento registrado | TRANSCRICAO | [09:40] Bruno |
 | PRD-OBJ-04 | `docs/PRD.md` | Objetivo / métrica | Janela de ~15 h coberta por retentativas | TRANSCRICAO | [09:17] Diego |
 | PRD-OBJ-05 | `docs/PRD.md` | Objetivo / métrica | Entrega em 3 sprints incluindo revisão de segurança | TRANSCRICAO | [09:47] Larissa |
@@ -126,7 +126,7 @@ Itens marcados como "proposta de implementação" no FDD também aparecem aqui c
 | ADR-004 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Decisão | HMAC-SHA256 sobre o corpo, secret por endpoint, rotação 24 h | TRANSCRICAO | [09:22] Sofia |
 | ADR-004-DEC-01 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Restrição | TLS obrigatório validado no schema Zod | TRANSCRICAO | [09:23] Sofia |
 | ADR-004-ALT-01 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Alternativa descartada | Secret global | TRANSCRICAO | [09:21] Sofia |
-| ADR-004-ALT-02 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Alternativa descartada | Rotação sem convivência | TRANSCRICAO | [09:21] Sofia |
+| ADR-004-ALT-02 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Alternativa (plausível) | Rotação sem convivência | TRANSCRICAO | [09:21] Sofia |
 | ADR-004-ALT-03 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Alternativa (plausível) | Outro algoritmo de assinatura | TRANSCRICAO | [09:20] Sofia |
 | ADR-004-CONS-01 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Trade-off | Secret precisa ser recuperável, diferente do `passwordHash` | CODIGO | `prisma/schema.prisma` |
 | ADR-004-CONS-02 | `docs/adrs/ADR-004-assinatura-hmac-sha256-com-secret-por-endpoint.md` | Trade-off | Secret não pode ir para logs — ampliar `redact` | CODIGO | `src/shared/logger/index.ts` |
@@ -175,11 +175,11 @@ Itens marcados como "proposta de implementação" no FDD também aparecem aqui c
 | FDD-FLX-06 | `docs/FDD.md` | Fluxo (proposta) | `PROCESSING` volta a `PENDING` no boot (single-worker) | TRANSCRICAO | [09:12] Diego |
 | FDD-FLX-07 | `docs/FDD.md` | Fluxo | Polling 2 s, pendentes mais antigos em lote pequeno | TRANSCRICAO | [09:09] Diego |
 | FDD-FLX-08 | `docs/FDD.md` | Fluxo | Processamento sequencial preserva ordem por `order_id` | TRANSCRICAO | [09:12] Diego |
-| FDD-FLX-09 | `docs/FDD.md` | Fluxo | Endpoint inativo ou sem secret vai para DLQ | TRANSCRICAO | [09:21] Bruno |
-| FDD-FLX-10 | `docs/FDD.md` | Fluxo | Checagem de 64 KB no worker, DLQ sem retry | TRANSCRICAO | [09:24] Larissa |
+| FDD-FLX-09 | `docs/FDD.md` | Fluxo (proposta) | Endpoint inativo ou sem secret vai para DLQ | TRANSCRICAO | [09:21] Bruno |
+| FDD-FLX-10 | `docs/FDD.md` | Fluxo (proposta) | Checagem de 64 KB no worker, DLQ sem retry (limite e erro decididos; o ponto da checagem é proposta) | TRANSCRICAO | [09:24] Larissa |
 | FDD-FLX-11 | `docs/FDD.md` | Fluxo | Assinatura HMAC-SHA256 e POST com timeout 10 s | TRANSCRICAO | [09:20] Sofia |
 | FDD-FLX-12 | `docs/FDD.md` | Fluxo | Registro de cada tentativa em `webhook_deliveries` | TRANSCRICAO | [09:34] Marcos |
-| FDD-FLX-13 | `docs/FDD.md` | Fluxo | 2xx = entregue; resto = falha | TRANSCRICAO | [09:42] Diego |
+| FDD-FLX-13 | `docs/FDD.md` | Fluxo (proposta) | 2xx = entregue; resto = falha (timeout como falha foi decidido; a regra de 2xx é proposta) | TRANSCRICAO | [09:42] Diego |
 | FDD-FLX-14 | `docs/FDD.md` | Fluxo (proposta) | Erro de banco no ciclo não derruba o loop | TRANSCRICAO | [09:11] Diego |
 | FDD-FLX-15 | `docs/FDD.md` | Fluxo | Incremento de `attempts` e `lastError` | TRANSCRICAO | [09:15] Diego |
 | FDD-FLX-16 | `docs/FDD.md` | Fluxo | Reagendamento com `RETRY_DELAYS_MS` | TRANSCRICAO | [09:17] Larissa |
@@ -187,7 +187,7 @@ Itens marcados como "proposta de implementação" no FDD também aparecem aqui c
 | FDD-FLX-18 | `docs/FDD.md` | Fluxo | `eventId` e payload imutáveis entre tentativas | TRANSCRICAO | [09:52] Bruno |
 | FDD-FLX-19 | `docs/FDD.md` | Fluxo | Outbox `FAILED` + insert em `webhook_dead_letter` | TRANSCRICAO | [09:18] Diego |
 | FDD-FLX-20 | `docs/FDD.md` | Fluxo | Replay recoloca na outbox como pendente | TRANSCRICAO | [09:35] Diego |
-| FDD-FLX-21 | `docs/FDD.md` | Fluxo | Replay mantém o mesmo `eventId` | TRANSCRICAO | [09:25] Diego |
+| FDD-FLX-21 | `docs/FDD.md` | Fluxo (proposta) | Replay mantém o mesmo `eventId` | TRANSCRICAO | [09:25] Diego |
 | FDD-FLX-22 | `docs/FDD.md` | Fluxo | Log de auditoria do replay com usuário | TRANSCRICAO | [09:36] Sofia |
 | FDD-FLX-23 | `docs/FDD.md` | Fluxo (proposta) | Nova falha cria nova linha de DLQ (evidência) | TRANSCRICAO | [09:18] Diego |
 | FDD-FLX-24 | `docs/FDD.md` | Fluxo | Rotação: secret anterior válida por 24 h | TRANSCRICAO | [09:21] Sofia |
@@ -236,7 +236,7 @@ Itens marcados como "proposta de implementação" no FDD também aparecem aqui c
 | FDD-RES-05 | `docs/FDD.md` | Resiliência | Isolamento: falha do cliente não afeta `changeStatus` | TRANSCRICAO | [09:04] Bruno |
 | FDD-RES-06 | `docs/FDD.md` | Resiliência | Crash do worker coberto por at-least-once | TRANSCRICAO | [09:24] Diego |
 | FDD-RES-07 | `docs/FDD.md` | Resiliência | Graceful shutdown no padrão da API | CODIGO | `src/server.ts` |
-| FDD-RES-08 | `docs/FDD.md` | Resiliência | Erros determinísticos vão direto à DLQ | TRANSCRICAO | [09:23] Sofia |
+| FDD-RES-08 | `docs/FDD.md` | Resiliência (proposta) | Erros determinísticos vão direto à DLQ | TRANSCRICAO | [09:23] Sofia |
 | FDD-RES-09 | `docs/FDD.md` | Resiliência (proposta) | Banco indisponível: tenta no próximo ciclo | TRANSCRICAO | [09:09] Diego |
 | FDD-INT-01 | `docs/FDD.md` | Integração | `changeStatus` chama `publishWebhookEvent(tx, …)` | CODIGO | `src/modules/orders/order.service.ts` |
 | FDD-INT-02 | `docs/FDD.md` | Integração | Enum de `events` derivado das transições | CODIGO | `src/modules/orders/order.status.ts` |

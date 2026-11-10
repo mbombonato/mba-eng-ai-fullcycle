@@ -241,11 +241,11 @@ Processo: `npm run worker` → `src/worker.ts` (novo) → `WebhookProcessor` (`s
 | FDD-FLX-06 | **Recuperação:** no boot, linhas em `PROCESSING` voltam para `PENDING` (seguro porque só existe um worker). | `[09:12] Diego` (single-worker) |
 | FDD-FLX-07 | **Polling:** a cada `WEBHOOK_POLL_INTERVAL_MS` (2000) busca `status=PENDING AND nextAttemptAt <= now()` ordenado por `createdAt ASC`, `LIMIT WEBHOOK_BATCH_SIZE` (proposta: 10). | `[09:08] Diego`, `[09:09] Diego` |
 | FDD-FLX-08 | **Processamento sequencial** do lote (sem concorrência), preservando a ordem de `createdAt` → ordenação por `order_id` enquanto single-worker. | `[09:12] Diego`, `[09:13] Larissa` |
-| FDD-FLX-09 | Para cada evento: marca `PROCESSING`; carrega o endpoint; se inativo/removido → DLQ com `WEBHOOK_ENDPOINT_INACTIVE`; se sem secret → DLQ com `WEBHOOK_SECRET_REQUIRED` (nunca envia sem assinatura). | `[09:21] Bruno`, `[09:19] Sofia` |
-| FDD-FLX-10 | Serializa o payload **uma única vez** (`body = JSON.stringify(payload)`); se `Buffer.byteLength(body) > 65536` → DLQ imediata com `WEBHOOK_PAYLOAD_TOO_LARGE`, sem retry (erro determinístico). | `[09:23] Sofia`, `[09:24] Larissa` |
+| FDD-FLX-09 | Para cada evento: marca `PROCESSING`; carrega o endpoint; se inativo/removido → DLQ com `WEBHOOK_ENDPOINT_INACTIVE`; se sem secret → DLQ com `WEBHOOK_SECRET_REQUIRED` (nunca envia sem assinatura). Proposta de implementação. | `[09:21] Bruno`, `[09:19] Sofia` |
+| FDD-FLX-10 | Serializa o payload **uma única vez** (`body = JSON.stringify(payload)`); se `Buffer.byteLength(body) > 65536` → DLQ imediata com `WEBHOOK_PAYLOAD_TOO_LARGE`, sem retry (erro determinístico). O limite e o erro foram decididos; checar no worker e ir à DLQ sem retry é proposta de implementação. | `[09:23] Sofia`, `[09:24] Larissa` |
 | FDD-FLX-11 | Assina `body` com HMAC-SHA256 (`node:crypto`) e envia `POST` com os headers de §6.8 usando `fetch` nativo + `AbortSignal.timeout(10000)`. | `[09:20] Sofia`, `[09:42] Diego` |
 | FDD-FLX-12 | Grava uma linha em `webhook_deliveries` por tentativa (status code, duração, corpo de resposta truncado, `errorCode`). | `[09:34] Marcos` |
-| FDD-FLX-13 | **2xx** → `status=DELIVERED`, `deliveredAt=now()`. Qualquer outro resultado (não-2xx, timeout, erro de rede) → Fluxo 3. | `[09:42] Diego` |
+| FDD-FLX-13 | **2xx** → `status=DELIVERED`, `deliveredAt=now()`. Qualquer outro resultado (não-2xx, timeout, erro de rede) → Fluxo 3. Timeout como falha foi decidido; a regra de 2xx é proposta de implementação. | `[09:42] Diego` |
 | FDD-FLX-14 | Após o lote, dorme até o próximo ciclo; erro de banco no ciclo é logado e o loop continua no ciclo seguinte. | proposta derivada de `[09:11] Diego` |
 
 > Por que checar 64 KB no worker e não na inserção? Lançar erro dentro de `changeStatus` faria rollback da mudança de status por causa de um webhook — exatamente o acoplamento rejeitado em `[09:04] Bruno`. No worker, o evento é recusado sem afetar o pedido.
@@ -269,7 +269,7 @@ Linha do tempo de um evento para cliente fora do ar: T0 (envio) → T0+1m → +5
 | --- | --- | --- |
 | FDD-FLX-19 | Na mesma transação: outbox `status=FAILED` + `INSERT` em `webhook_dead_letter` com `payload`, `failureCode`, `failureReason`, `attempts`, `failedAt`. | `[09:18] Diego` |
 | FDD-FLX-20 | Replay: `POST /api/v1/admin/webhooks/dead-letter/:id/replay` (role `ADMIN`). Em transação: valida que a DLQ existe e não foi reprocessada; outbox volta para `PENDING`, `attempts=0`, `nextAttemptAt=now()`, `lastError=null`; DLQ recebe `replayedAt` e `replayedById`. | `[09:18] Diego`, `[09:36] Larissa` |
-| FDD-FLX-21 | O replay mantém o mesmo `eventId` — o cliente deduplica se já tiver processado. | `[09:25] Diego` |
+| FDD-FLX-21 | O replay mantém o mesmo `eventId` — o cliente deduplica se já tiver processado. Proposta de implementação. | `[09:25] Diego` |
 | FDD-FLX-22 | Log de auditoria `webhook_dead_letter_replayed` com `userId`, `deadLetterId`, `eventId`. | `[09:36] Sofia` |
 | FDD-FLX-23 | Se o evento falhar de novo, uma **nova** linha de DLQ é criada (a anterior permanece como histórico). | proposta de implementação |
 
@@ -665,7 +665,7 @@ Redação: ampliar `redactPaths` em `src/shared/logger/index.ts` com `'*.secret'
 | FDD-RES-05 | Isolamento de falha | Worker em processo próprio; falha do cliente nunca afeta `changeStatus`. | `[09:11] Diego`, `[09:04] Bruno` |
 | FDD-RES-06 | Crash do worker | Linhas `PROCESSING` voltam a `PENDING` no boot; possível reenvio é coberto por at-least-once. | `[09:24] Diego` |
 | FDD-RES-07 | Graceful shutdown | Em `SIGTERM`, termina o evento corrente, não pega novo lote e chama `prisma.$disconnect()` (padrão de `src/server.ts`). | `src/server.ts` |
-| FDD-RES-08 | Erros determinísticos | Payload > 64 KB, endpoint inativo, sem secret → DLQ direto, sem gastar retries. | `[09:23] Sofia` |
+| FDD-RES-08 | Erros determinísticos | Payload > 64 KB, endpoint inativo, sem secret → DLQ direto, sem gastar retries. Proposta de implementação. | `[09:23] Sofia` |
 | FDD-RES-09 | Banco indisponível | Ciclo falha, é logado em `error` e o loop tenta de novo no próximo intervalo. | proposta de implementação |
 
 ## 10. Integração com o sistema existente

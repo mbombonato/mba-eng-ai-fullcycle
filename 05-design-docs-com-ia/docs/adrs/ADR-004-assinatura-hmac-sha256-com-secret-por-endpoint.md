@@ -24,7 +24,7 @@ Os webhooks enviam dados de pedidos para endpoints fora da nossa infraestrutura.
 | Alternativa | Por que foi descartada |
 | --- | --- |
 | **Secret global da plataforma** | Se vaza uma, vaza tudo (`[09:21] Sofia`). |
-| **Rotação sem período de convivência** | O cliente não teria tempo de migrar seus sistemas; o grace period de 24 h existe exatamente para isso (`[09:21] Sofia`). |
+| **Rotação sem período de convivência** (plausível, não proposta na reunião) | O cliente não teria tempo de migrar seus sistemas; o grace period de 24 h existe exatamente para isso (`[09:21] Sofia`). |
 | **Outro algoritmo/esquema de assinatura** (plausível, não detalhado na reunião) | HMAC-SHA256 é o padrão de mercado e todo cliente sério tem biblioteca para validá-lo (`[09:20] Sofia`). |
 
 ## Consequências

@@ -37,7 +37,7 @@ A demanda veio formalmente de três clientes B2B — **Atlas Comercial, MaxDistr
 | --- | --- |
 | PRD-CEN-01 | Um cliente cadastra um endpoint `https` e escolhe ser avisada apenas quando o pedido vira `SHIPPED` e `DELIVERED` (`[09:33] Marcos`). Quando um operador marca um pedido como enviado, o sistema do cliente recebe o aviso em poucos segundos. |
 | PRD-CEN-02 | O sistema de um cliente fica 2 horas fora do ar para manutenção planejada. As notificações do período são reenviadas automaticamente quando ele volta (`[09:16] Diego`). |
-| PRD-CEN-03 | Um cliente reclama que "não recebeu" um aviso; o suporte consulta o histórico das últimas entregas daquele webhook, com sucesso/falha e tempo de resposta (`[09:34] Marcos`). |
+| PRD-CEN-03 | Um cliente quer saber se um aviso foi enviado e consulta o histórico das últimas entregas daquele webhook, com sucesso/falha e tempo de resposta (`[09:34] Marcos`). |
 | PRD-CEN-04 | Um cliente vaza sua secret num log; ele pede uma nova secret pela API e tem 24 horas para trocar nos seus sistemas sem perder notificações (`[09:21] Sofia`, `[09:22] Diego`). |
 | PRD-CEN-05 | Uma notificação esgota todas as tentativas; um administrador a reenvia manualmente depois que o cliente corrige o problema (`[09:18] Diego`). |
 
@@ -45,8 +45,8 @@ A demanda veio formalmente de três clientes B2B — **Atlas Comercial, MaxDistr
 
 | ID | Objetivo | Métrica | Meta | Origem |
 | --- | --- | --- | --- | --- |
-| PRD-OBJ-01 | Entregar notificações em "tempo real" na percepção do cliente | Tempo entre a mudança de status e a primeira tentativa de entrega (p95) | **< 10 segundos** (espera máxima de 2 s pelo ciclo do worker) | `[09:02] Marcos`, `[09:10] Larissa` |
-| PRD-OBJ-02 | Atender os três clientes que fizeram o pedido formal | Clientes com webhook ativo em produção | **3 de 3** (Atlas, MaxDistribuição, Nova Cargo) até **fim de novembro** | `[09:00] Marcos`, `[09:45] Marcos` |
+| PRD-OBJ-01 | Entregar notificações em "tempo real" na percepção do cliente | Tempo entre a mudança de status e a primeira tentativa de entrega (p95; o percentil é proposta deste documento) | **< 10 segundos** (espera máxima de 2 s pelo ciclo do worker) | `[09:02] Marcos`, `[09:10] Larissa` |
+| PRD-OBJ-02 | Atender os três clientes que fizeram o pedido formal | Clientes com webhook ativo em produção | **3 de 3** (Atlas, MaxDistribuição, Nova Cargo). A Atlas pediu **fim de novembro**; os outros dois não deram data na reunião | `[09:00] Marcos`, `[09:45] Marcos` |
 | PRD-OBJ-03 | Não perder nenhuma notificação | Mudanças de status com webhook interessado sem evento registrado | **0** | `[09:40] Bruno` |
 | PRD-OBJ-04 | Tolerar indisponibilidade do cliente | Janela coberta por novas tentativas automáticas | **~15 horas** (5 retentativas) | `[09:17] Diego` |
 | PRD-OBJ-05 | Entregar no prazo combinado | Sprints até o deploy, incluindo revisão de segurança | **3 sprints** | `[09:47] Larissa` |
