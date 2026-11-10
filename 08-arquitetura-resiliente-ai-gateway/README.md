@@ -1,3 +1,24 @@
+# Helpdesk com IA: estado na tag `v2-decoupled`
+
+Esta tag marca a aplicação refatorada, já atrás do AI Gateway (LiteLLM), com o mesmo comportamento externo da `v1-coupled`. A suíte de caracterização é a mesma da `v1-coupled`. A versão final e a documentação completa estão na branch `main`.
+
+Como rodar a suíte nesta tag (Docker com Compose v2 e Python 3.12; o primeiro `up` leva cerca de 1 min por causa das migrações do banco do gateway):
+
+```
+cp .env.example .env
+docker compose up -d --build --wait
+python3 -m venv .venv && .venv/bin/pip install -r tests/requirements.txt
+.venv/bin/pytest tests/characterization
+```
+
+São 17 testes. As medições estão em `metrics/results/v1-coupled.csv` e `metrics/results/v2-decoupled.csv`.
+
+O `docs/refactoring-plan.md` desta tag cita os ADRs 0005, 0008 e 0009 e a seção "Como rodar" do README. Eles foram escritos depois da tag e estão na `main`.
+
+O restante deste arquivo é o enunciado do repositório base, mantido como veio.
+
+---
+
 # Da integração frágil à arquitetura resiliente: IA em produção num helpdesk
 
 ## Descrição
