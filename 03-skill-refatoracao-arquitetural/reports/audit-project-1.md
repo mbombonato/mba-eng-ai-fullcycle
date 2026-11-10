@@ -12,7 +12,7 @@ Database:      SQLite via driver nativo sqlite3 (SQL manual), arquivo loja.db
 Domain:        E-commerce API (produtos, usuários, pedidos, relatório de vendas)
 Architecture:  Monolito sem camadas — 4 arquivos; models.py concentra SQL + regras de 4 domínios,
                app.py mistura roteamento com handlers administrativos que executam SQL
-Entry point:   app.py (python app.py, porta 5000)
+Entry point:   app.py (python3 app.py, porta 5000)
 Source files:  4 files analyzed (~780 lines)
 DB tables:     produtos, usuarios, pedidos, itens_pedido
 Endpoints:     19 routes
@@ -188,7 +188,7 @@ conversores padrão de `TIMESTAMP`, deprecated, só atuam com `detect_types`, qu
 
 ```
 code-smells-project/
-├── app.py                         # entry point fino (python app.py)
+├── app.py                         # entry point fino (python3 app.py)
 ├── .env.example
 ├── src/
 │   ├── app.py                     # composition root: create_app()

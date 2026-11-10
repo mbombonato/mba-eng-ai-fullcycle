@@ -90,7 +90,7 @@ O desafio não fixa modelos. Os padrões são os modelos leves/baratos disponív
 2. Executar a ingestão do PDF:
 
    ```bash
-   python src/ingest.py
+   python3 src/ingest.py
    ```
 
    Saída esperada:
@@ -106,7 +106,7 @@ O desafio não fixa modelos. Os padrões são os modelos leves/baratos disponív
 3. Rodar o chat:
 
    ```bash
-   python src/chat.py
+   python3 src/chat.py
    ```
 
    Digite `sair` (ou `Ctrl+C`) para encerrar.
@@ -138,7 +138,7 @@ Os testes não precisam de chave de API: usam embeddings determinísticos e uma 
 ```bash
 docker compose up -d
 DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/rag \
-  python -m unittest discover -s tests -v
+  python3 -m unittest discover -s tests -v
 ```
 
 Os testes usam a collection `test_document_chunks` e a removem ao final.

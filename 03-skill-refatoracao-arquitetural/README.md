@@ -160,7 +160,7 @@ Cada entrada tem **sinais de detecção acionáveis** (ex.: "query dentro de `fo
    "Contract changes" — e a spec de smoke test prova os dois lados (`forbid_keys`, `expect_status` 401/403).
 4. **Projeto parcialmente organizado.** Reescrever o projeto 3 do zero seria fácil, mas errado. A guideline
    manda reaproveitar `models/` e `routes/` (rotas viram views finas) e acrescentar `controllers/`,
-   `services/`, `config/`, `middlewares/` — o que manteve `python seed.py && python app.py` funcionando.
+   `services/`, `config/`, `middlewares/` — o que manteve `python3 seed.py && python3 app.py` funcionando.
 5. **Hashes legados.** Trocar MD5/texto puro por scrypt quebraria logins em bancos existentes. O playbook P-04
    inclui migração transparente no primeiro login válido (testado com o banco gerado pela versão antiga do projeto 3).
 6. **Ambiente:** não havia `npm` no PATH; as dependências do projeto 2 foram instaladas com `bun install --no-save`
@@ -243,7 +243,7 @@ Baseline (apps **originais**) × depois (apps **refatorados**), mesma spec `test
 Execução final (boot do zero com o comando de start documentado de cada projeto):
 
 ```
-### Projeto 1 — code-smells-project (python app.py)
+### Projeto 1 — code-smells-project (python3 app.py)
  * Serving Flask app 'src.app'
  * Debug mode: off
  * Running on http://127.0.0.1:5121
@@ -252,7 +252,7 @@ Execução final (boot do zero com o comando de start documentado de cada projet
 2026-11-09T19:54:16.023Z [WARN] PAYMENT_GATEWAY_KEY não configurada (gateway em modo simulado)
 2026-11-09T19:54:16.047Z [INFO] LMS API rodando na porta 5122
 12/12 requisições OK
-### Projeto 3 — task-manager-api (python seed.py && python app.py)
+### Projeto 3 — task-manager-api (python3 seed.py && python3 app.py)
 Seed concluído com sucesso!
  * Serving Flask app 'app'
  * Debug mode: off
@@ -276,7 +276,7 @@ Trecho do smoke test do projeto 1 refatorado (casos que falhavam no original e a
 
 Verificações adicionais executadas:
 - **Contrato:** comparação automática das chaves JSON de todas as respostas de sucesso baseline × refatorado — idênticas, exceto os campos sensíveis removidos de propósito. No projeto 3 os **valores** (listagens, estatísticas, relatórios) também batem, desconsiderando timestamps.
-- **Boot sem APIs deprecated:** projetos Python sobem com `python -W error::DeprecationWarning` (inclusive `seed.py`); projeto 2 com `node --trace-deprecation`, sem avisos.
+- **Boot sem APIs deprecated:** projetos Python sobem com `python3 -W error::DeprecationWarning` (inclusive `seed.py`); projeto 2 com `node --trace-deprecation`, sem avisos.
 - **Re-scan:** greps dos findings CRITICAL/HIGH sem ocorrências (SQL concatenado, segredos, `debug=True`, `except:`, `query.get`, `utcnow`); `pyflakes` sem imports mortos.
 - **Migração de hash:** login com o banco gerado pela versão antiga do projeto 3 (MD5) funciona e regrava o hash como scrypt.
 - Casos de borda: JSON malformado → 400, corpo ausente no login → 400, quantidade negativa no pedido → 400, `priority=x` na busca → 400, cor inválida → 400.
@@ -308,7 +308,7 @@ Verificações adicionais executadas:
 ### Observações sobre o comportamento em stacks diferentes
 
 - **Monolito Python (P1):** transformação mais ampla — árvore MVC completa em `src/`, com o `app.py` raiz
-  reduzido a entry point para manter `python app.py`. O maior ganho foi de segurança (SQLi, admin, senhas).
+  reduzido a entry point para manter `python3 app.py`. O maior ganho foi de segurança (SQLi, admin, senhas).
 - **Node/Express (P2):** além do MVC, a skill aplicou transformações específicas de runtime assíncrono
   (P-10 callbacks → async/await, `asyncHandler` porque o Express 4 não captura rejeições) e transações
   serializadas na conexão única. O relatório financeiro saiu de 1 + C + 2E queries para 1 `LEFT JOIN`,
@@ -367,7 +367,7 @@ gera o relatório da Fase 2 e para em `Proceed with refactoring (Phase 3)? [y/n]
 SMOKE=.claude/skills/refactor-arch/scripts/smoke_test.py
 
 # Projeto 1
-cd code-smells-project && python -m venv .venv && .venv/bin/pip install -r requirements.txt
+cd code-smells-project && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ADMIN_TOKEN=smoke DATABASE_PATH=/tmp/p1.db PORT=5111 .venv/bin/python app.py &
 ADMIN_TOKEN=smoke python3 $SMOKE tests/smoke.json --base-url http://127.0.0.1:5111   # 36/36
 kill %1
@@ -379,7 +379,7 @@ ADMIN_TOKEN=smoke python3 $SMOKE tests/smoke.json --base-url http://127.0.0.1:31
 kill %1
 
 # Projeto 3
-cd ../task-manager-api && python -m venv .venv && .venv/bin/pip install -r requirements.txt
+cd ../task-manager-api && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 DATABASE_URL=sqlite:////tmp/p3.db .venv/bin/python seed.py
 DATABASE_URL=sqlite:////tmp/p3.db PORT=5113 .venv/bin/python app.py &
 python3 $SMOKE tests/smoke.json --base-url http://127.0.0.1:5113                      # 37/37

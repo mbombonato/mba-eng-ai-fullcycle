@@ -6,8 +6,8 @@ para MVC** pela skill (relatório em `../reports/audit-project-1.md`).
 ## Como rodar
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements.txt
-export ADMIN_TOKEN=troque-este-token SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))")
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+export ADMIN_TOKEN=troque-este-token SECRET_KEY=$(python3 -c "import secrets;print(secrets.token_hex(32))")
 .venv/bin/python app.py
 ```
 
@@ -18,7 +18,7 @@ A aplicação sobe em `http://127.0.0.1:5000` (ajuste com `HOST`/`PORT`). O banc
 ## Estrutura
 
 ```
-app.py                      # entry point (python app.py / flask --app app run)
+app.py                      # entry point (python3 app.py / flask --app app run)
 src/
 ├── app.py                  # composition root: create_app()
 ├── config/                 # settings.py (ambiente) e constants.py (regras de domínio)

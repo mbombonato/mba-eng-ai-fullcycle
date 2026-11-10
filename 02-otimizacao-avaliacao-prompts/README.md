@@ -145,7 +145,7 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 ### Screenshots
 
-**Avaliação v2 aprovada** (saída do `python src/evaluate.py`, todas as métricas ≥ 0.8):
+**Avaliação v2 aprovada** (saída do `python3 src/evaluate.py`, todas as métricas ≥ 0.8):
 
 ![Avaliação v2 aprovada](docs/evaluate_v2.png)
 
@@ -174,7 +174,7 @@ títulos de seção usados nas referências, escolhidos pelo passo 4 do raciocí
 
 Provider/modelos usados: `LLM_PROVIDER=openai` / `LLM_MODEL=gpt-4o` / `EVAL_MODEL=gpt-4o` (temperature 0).
 
-> As notas do v2 vêm do `python src/evaluate.py` oficial. As do v1 foram medidas com as
+> As notas do v2 vêm do `python3 src/evaluate.py` oficial. As do v1 foram medidas com as
 > **mesmas funções** de `src/metrics.py`, os mesmos 15 exemplos e os mesmos modelos, por um
 > script local que monta o v1 de `prompts/bug_to_user_story_v1.yml`. Assim o v2 público no
 > Hub não precisou ser sobrescrito. O ganho se concentra no **F1-Score** (+0.08), a única
@@ -255,7 +255,7 @@ Preencha:
 ### 4. Pull do prompt original (v1)
 
 ```bash
-python src/pull_prompts.py
+python3 src/pull_prompts.py
 ```
 
 Faz `client.pull_prompt("leonanluppi/bug_to_user_story_v1", dangerously_pull_public_prompt=True)`
@@ -275,7 +275,7 @@ e que `{bug_report}` é a única variável (e só aparece no user prompt).
 ### 6. Push do v2 para o Hub (público)
 
 ```bash
-python src/push_prompts.py
+python3 src/push_prompts.py
 ```
 
 Valida o YAML e publica `<USERNAME_LANGSMITH_HUB>/bug_to_user_story_v2` com
@@ -284,7 +284,7 @@ Valida o YAML e publica `<USERNAME_LANGSMITH_HUB>/bug_to_user_story_v2` com
 ### 7. Avaliar
 
 ```bash
-python src/evaluate.py
+python3 src/evaluate.py
 ```
 
 Cria/reutiliza o dataset `<LANGSMITH_PROJECT>-eval` (15 exemplos), puxa o v2 do Hub,
@@ -294,7 +294,7 @@ roda o experimento e imprime as 5 métricas e o link do experimento.
 
 1. Abra o experimento no LangSmith e veja os exemplos com nota baixa e o `reasoning` do juiz
 2. Ajuste `prompts/bug_to_user_story_v2.yml`
-3. `pytest tests/test_prompts.py` → `python src/push_prompts.py` → `python src/evaluate.py`
+3. `pytest tests/test_prompts.py` → `python3 src/push_prompts.py` → `python3 src/evaluate.py`
 4. Registre a iteração na tabela de "Histórico de iterações"
 
 ### 9. Compartilhar o dataset (link público)

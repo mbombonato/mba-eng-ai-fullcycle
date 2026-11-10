@@ -14,7 +14,7 @@ Domain:        Task Manager API (tasks, usuários, categorias, relatórios de pr
 Architecture:  Camadas parciais — existem models/, routes/, services/, utils/, mas os blueprints
                concentram validação, regras (atraso, estatísticas) e queries; services/ e utils/
                estão praticamente sem uso; config hardcoded no entry point
-Entry point:   app.py (python seed.py && python app.py, porta 5000)
+Entry point:   app.py (python3 seed.py && python3 app.py, porta 5000)
 Source files:  15 files analyzed (~1158 lines, incluindo seed.py e 4 __init__.py)
 DB tables:     users, tasks, categories
 Endpoints:     22 routes
@@ -183,7 +183,7 @@ Date:    2026-11-09
 
 ```
 task-manager-api/
-├── app.py                     # entry point + create_app() (mesmo comando: python app.py)
+├── app.py                     # entry point + create_app() (mesmo comando: python3 app.py)
 ├── seed.py                    # usa create_app()
 ├── .env.example
 ├── config/{settings.py, constants.py}

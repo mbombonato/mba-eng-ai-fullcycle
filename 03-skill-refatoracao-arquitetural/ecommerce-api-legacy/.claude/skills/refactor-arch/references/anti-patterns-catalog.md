@@ -203,7 +203,7 @@ Cada entrada traz: **sinais de detecção** (o que procurar — grep e leitura),
 ### AP-24 — Imports não usados / código morto
 - **Sinais:** `import os, sys, json, time` sem uso; funções/constantes nunca referenciadas;
   exports não consumidos (`totalRevenue`).
-  `python -m pyflakes .` / `npx eslint --rule 'no-unused-vars: error'` ou leitura.
+  `python3 -m pyflakes .` / `npx eslint --rule 'no-unused-vars: error'` ou leitura.
 - **Fix:** remover durante a refatoração.
 
 ### AP-25 — Condicionais verbosas / aninhamento desnecessário

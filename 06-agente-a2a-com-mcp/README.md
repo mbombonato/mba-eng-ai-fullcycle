@@ -38,14 +38,14 @@ Sem a variável, ou com menos de 32 bytes, o servidor se recusa a subir. Nunca v
 
 ```bash
 cd servidor-mcp
-uv run python servidor.py
+uv run python3 servidor.py
 ```
 
 **3. Terminal 2, agente:**
 
 ```bash
 cd agente
-uv run python agente.py
+uv run python3 agente.py
 ```
 
 **4. Terminal 3, validador** (com os dois processos recém-iniciados):

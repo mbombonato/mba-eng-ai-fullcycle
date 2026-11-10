@@ -44,7 +44,7 @@ prova do problema). Qualquer outra falha indica erro na spec — corrija a spec 
 
 1. **Boot limpo:** suba com o comando de start documentado; o log não pode conter stacktrace,
    `Error`, `Traceback` ou `DeprecationWarning` originado do código do projeto.
-   - Python: `python -W error::DeprecationWarning -c "import app"` ajuda a flagrar APIs deprecated remanescentes.
+   - Python: `python3 -W error::DeprecationWarning -c "import app"` ajuda a flagrar APIs deprecated remanescentes.
    - Node: `node --trace-deprecation src/server.js`.
 2. **Smoke test:** rode a mesma spec; o resultado exigido é `N/N requisições OK`.
 3. **Compare com o baseline:** para rotas de sucesso, as chaves do JSON devem ser as mesmas

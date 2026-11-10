@@ -8,7 +8,7 @@ corretos e acrescentou `config/`, `controllers/`, `views/` e `middlewares/`.
 ## Como rodar
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 cp .env.example .env      # defina SECRET_KEY
 .venv/bin/python seed.py
 .venv/bin/python app.py
