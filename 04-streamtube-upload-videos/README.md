@@ -89,7 +89,8 @@ Serviços disponíveis:
 ```bash
 cd next-frontend
 
-# Garanta que o .env.local existe (veja .env.example)
+# Crie o .env.local a partir do exemplo e troque o SESSION_PASSWORD (mínimo de 32 caracteres)
+cp .env.example .env.local
 # API_URL aponta para o backend; SESSION_PASSWORD protege a sessão (iron-session)
 
 docker compose up -d
@@ -112,6 +113,8 @@ docker compose exec -d -u root nestjs-api npm run start:dev
 ```
 
 No modo rootless, o `root` do contêiner corresponde ao seu próprio usuário no host, então os arquivos criados continuam sendo seus.
+
+Ainda no modo rootless, `host.docker.internal` não alcança as portas publicadas no host, e o frontend não consegue chamar o backend. Use o IP da máquina na rede em `next-frontend/.env.local` (por exemplo `API_URL=http://192.168.1.10:3000`; veja o seu com `hostname -I`).
 
 ## 🧪 Testes
 
