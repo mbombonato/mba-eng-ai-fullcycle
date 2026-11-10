@@ -101,6 +101,18 @@ A aplicação ficará disponível em **http://localhost:3001**.
 
 > As stacks são separadas, então o frontend acessa o backend via `host.docker.internal:3000` (configurado em `next-frontend/.env.local` e no `extra_hosts` do compose).
 
+### Docker rootless
+
+No Docker em modo rootless (`docker context ls` mostra `rootless` ativo), o usuário `node` do contêiner não consegue gravar na pasta montada, e `npm install` falha com `EACCES` em `package-lock.json`. Nesse caso, acrescente `-u root` a todos os `docker compose exec` deste guia, nos dois subprojetos. Exemplo:
+
+```bash
+docker compose exec -u root nestjs-api npm install
+docker compose exec -u root nestjs-api npm run migration:run
+docker compose exec -d -u root nestjs-api npm run start:dev
+```
+
+No modo rootless, o `root` do contêiner corresponde ao seu próprio usuário no host, então os arquivos criados continuam sendo seus.
+
 ## 🧪 Testes
 
 ### Backend (Jest)
