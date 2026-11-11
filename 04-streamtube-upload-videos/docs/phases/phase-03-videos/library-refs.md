@@ -24,7 +24,7 @@ sources_mtime:
 
 Distilled docs for the libraries decided in this phase.
 
-**Note on the source.** During planning and implementation the context7 MCP server was not configured in this workspace (`.mcp.json` lists only `postgres`), so the official documentation pages and changelogs were consulted directly, and versions/peer ranges were read from the npm registry (`npm view`) inside the `nestjs-api` container. After the implementation, the APIs below were re-checked against context7 through its HTTP API (`context7.com/api/v1`, library IDs in the front matter):
+**Source.** The context7 MCP server is not configured in `.mcp.json` (only `postgres`). The APIs below come from the official documentation and changelogs, and the versions/peer ranges from the npm registry (`npm view`). After the implementation they were checked against context7 through its HTTP API (`context7.com/api/v1`, library IDs in the front matter):
 
 - **Confirmed in context7:** BullMQ `attempts` + exponential `backoff`, `UnrecoverableError`, custom `jobId`, `removeOnComplete`/`removeOnFail`, `attemptsMade`; NestJS `BullModule.forRootAsync`, `registerQueue`, `@InjectQueue`, `@Processor` + `WorkerHost` with dispatch by `job.name`; AWS SDK v3 `CreateMultipartUpload`/`UploadPart`/`CompleteMultipartUpload`/`AbortMultipartUpload`/`HeadObject`/`PutObject`/`DeleteObject` commands and `getSignedUrl(..., { expiresIn })`.
 - **Not found in the context7 snippets** (confirmed only in the installed SDK typings, `@aws-sdk/client-s3/dist-types`, and exercised by the e2e tests against MinIO): `forcePathStyle`, `requestChecksumCalculation` / `responseChecksumValidation: 'WHEN_REQUIRED'`.

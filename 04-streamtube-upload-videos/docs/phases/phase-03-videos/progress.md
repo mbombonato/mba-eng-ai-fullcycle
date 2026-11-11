@@ -7,7 +7,7 @@
 - **Status:** completed
 - **Tests:** 9/9 passing (env.validation.integration-spec.ts); suítes existentes verdes
 - **Observations:**
-- Não foi possível baixar a imagem `minio/minio` neste ambiente (pull negado no Docker Hub e no quay.io em 2026-11); `minio` e `minio-init` usam `pgsty/minio:RELEASE.2026-08-04T00-00-00Z`, registrado em `phase-03-videos/TD-03`.
+- O pull da imagem `minio/minio` foi negado no Docker Hub e no quay.io (2026-11); `minio` e `minio-init` usam `pgsty/minio:RELEASE.2026-08-04T00-00-00Z`, registrado em `phase-03-videos/TD-03`.
 - O serviço `worker` compartilha o bind mount e o `node_modules` com `nestjs-api`; fica reiniciando (`restart: unless-stopped`) até o primeiro `npm install`.
 - Extraídos `configModuleOptions` (`src/config/config-module.options.ts`) e `typeOrmAsyncOptions` (`src/database/typeorm-options.factory.ts`) para serem compartilhados por `AppModule` e `WorkerModule` (antecipado do SI-03.8).
 

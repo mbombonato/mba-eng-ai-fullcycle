@@ -102,9 +102,54 @@ A aplicação ficará disponível em **http://localhost:3001**.
 
 > As stacks são separadas, então o frontend acessa o backend via `host.docker.internal:3000` (configurado em `next-frontend/.env.local` e no `extra_hosts` do compose).
 
+### 3. Testar a Fase 03 pela API
+
+O frontend do repositório base cobre só autenticação (login, cadastro e esqueci a senha). O login não redireciona para nenhuma área logada, e o link do e-mail de redefinição de senha aponta para `GET /auth/reset-password`, rota que só existe como `POST`. Por isso a Fase 03 é testada pela API.
+
+O worker sobe junto com o `docker compose up -d` e fica reiniciando até o primeiro `npm install`. Confira com `docker compose logs worker` (deve aparecer `Video worker started`).
+
+O roteiro abaixo usa `curl` e `jq` no host e um arquivo `video.mp4` menor que 100 MB (uma única parte).
+
+```bash
+API=http://localhost:3000
+
+# 1. Cadastro. Depois abra o Mailpit (http://localhost:8025) e clique no link de confirmação
+curl -s -X POST $API/auth/register -H 'Content-Type: application/json' \
+  -d '{"email":"teste@example.com","password":"senha12345"}'
+
+# 2. Login
+TOKEN=$(curl -s -X POST $API/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"teste@example.com","password":"senha12345"}' | jq -r .access_token)
+
+# 3. Inicia o upload: cria o vídeo como draft e devolve a URL pré-assinada da parte
+RES=$(curl -s -X POST $API/videos -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"title\":\"Teste\",\"file_name\":\"video.mp4\",\"file_size\":$(wc -c < video.mp4),\"content_type\":\"video/mp4\"}")
+SLUG=$(echo "$RES" | jq -r .video.slug)
+PART_URL=$(echo "$RES" | jq -r '.upload.parts[0].url')
+
+# 4. Envia o arquivo direto para o MinIO e guarda o ETag
+ETAG=$(curl -s -D - -o /dev/null -X PUT --data-binary @video.mp4 "$PART_URL" \
+  | grep -i '^etag:' | cut -d' ' -f2 | tr -d '\r')
+
+# 5. Conclui o upload: o vídeo vai para processing e o job entra na fila
+curl -s -X POST $API/videos/$SLUG/upload/complete -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d "$(jq -n --arg e "$ETAG" '{parts:[{part_number:1,etag:$e}]}')"
+
+# 6. Consulta o status até ficar ready (duration_seconds e metadata preenchidos)
+curl -s $API/videos/$SLUG -H "Authorization: Bearer $TOKEN" | jq
+
+# 7. Streaming (espera 206 Partial Content), download e thumbnail
+curl -s -L -o /dev/null -w '%{http_code}\n' -H 'Range: bytes=0-1023' $API/videos/$SLUG/stream
+curl -s -L -o baixado.mp4 $API/videos/$SLUG/download
+curl -s -L -o thumb.jpg $API/videos/$SLUG/thumbnail
+```
+
+Arquivos maiores que 100 MB são divididos em partes de 100 MB (`UPLOAD_PART_SIZE_MB`): envie cada trecho para a URL da parte correspondente e informe todos os ETags no passo 5. Os mesmos endpoints estão no Swagger (`SWAGGER_ENABLED=true`).
+
 ### Docker rootless
 
-No Docker em modo rootless (`docker context ls` mostra `rootless` ativo), o usuário `node` do contêiner não consegue gravar na pasta montada, e `npm install` falha com `EACCES` em `package-lock.json`. Nesse caso, acrescente `-u root` a todos os `docker compose exec` deste guia, nos dois subprojetos. Exemplo:
+No Docker rootless (`docker context ls` mostra `rootless` ativo), o usuário `node` do contêiner não consegue gravar na pasta montada, e `npm install` falha com `EACCES`. Acrescente `-u root` a todos os `docker compose exec` deste guia, nos dois subprojetos:
 
 ```bash
 docker compose exec -u root nestjs-api npm install
@@ -112,9 +157,9 @@ docker compose exec -u root nestjs-api npm run migration:run
 docker compose exec -d -u root nestjs-api npm run start:dev
 ```
 
-No modo rootless, o `root` do contêiner corresponde ao seu próprio usuário no host, então os arquivos criados continuam sendo seus.
+Nesse modo, o `root` do contêiner corresponde ao seu usuário no host, então os arquivos criados continuam sendo seus.
 
-Ainda no modo rootless, `host.docker.internal` não alcança as portas publicadas no host, e o frontend não consegue chamar o backend. Use o IP da máquina na rede em `next-frontend/.env.local` (por exemplo `API_URL=http://192.168.1.10:3000`; veja o seu com `hostname -I`).
+`host.docker.internal` também não alcança as portas publicadas no host. Em `next-frontend/.env.local`, use o IP da máquina na rede (por exemplo `API_URL=http://192.168.1.10:3000`; veja o seu com `hostname -I`).
 
 ## 🧪 Testes
 

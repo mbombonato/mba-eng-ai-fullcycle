@@ -48,7 +48,7 @@ _None._ (`next-frontend/` deferred for this phase — see context.md § Non-UI /
 
 ## Resolved Issues
 
-Revalidated on 2026-11-09 against the final artifacts (checks 1 to 7 of `plan-validate`): no open issue. The four issues below were found and resolved during planning; their resolutions are still reflected in TD-08, TD-03, TD-04 and TD-07.
+Issues found and resolved during planning. The resolutions are recorded in TD-08, TD-03, TD-04 and TD-07.
 
 | ID | Category | Finding | Resolution |
 |----|----------|-----------------|------------|
