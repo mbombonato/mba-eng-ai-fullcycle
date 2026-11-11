@@ -17,6 +17,19 @@ pela Full Cycle (equivalente ao fork pedido no enunciado) e contém o enunciado 
 | 7 | Regra é regra: o assistente virtual do Residencial Aurora | Desenvolvimento de Agentes com IA | [`07-agente-residencial-aurora`](07-agente-residencial-aurora) | [mba-ia-desafio-criacao-agente](https://github.com/devfullcycle/mba-ia-desafio-criacao-agente) |
 | 8 | Da integração frágil à arquitetura resiliente | Arquitetura na Era da IA | [`08-arquitetura-resiliente-ai-gateway`](08-arquitetura-resiliente-ai-gateway) | [desafio-arquitetura-era-ia-1](https://github.com/devfullcycle/desafio-arquitetura-era-ia-1) |
 
+## Repositórios de entrega
+
+A plataforma da Full Cycle aceita um repositório por desafio, então cada pasta também está publicada em repositório próprio, com o mesmo conteúdo e o histórico da pasta:
+
+- [mba-eng-ai-01-ingestao-busca-semantica](https://github.com/mbombonato/mba-eng-ai-01-ingestao-busca-semantica)
+- [mba-eng-ai-02-otimizacao-avaliacao-prompts](https://github.com/mbombonato/mba-eng-ai-02-otimizacao-avaliacao-prompts)
+- [mba-eng-ai-03-skill-refatoracao-arquitetural](https://github.com/mbombonato/mba-eng-ai-03-skill-refatoracao-arquitetural)
+- [mba-eng-ai-04-streamtube-upload-videos](https://github.com/mbombonato/mba-eng-ai-04-streamtube-upload-videos)
+- [mba-eng-ai-05-design-docs-com-ia](https://github.com/mbombonato/mba-eng-ai-05-design-docs-com-ia)
+- [mba-eng-ai-06-agente-a2a-com-mcp](https://github.com/mbombonato/mba-eng-ai-06-agente-a2a-com-mcp)
+- [mba-eng-ai-07-agente-residencial-aurora](https://github.com/mbombonato/mba-eng-ai-07-agente-residencial-aurora)
+- [mba-eng-ai-08-arquitetura-resiliente-ai-gateway](https://github.com/mbombonato/mba-eng-ai-08-arquitetura-resiliente-ai-gateway)
+
 ## Como avaliar
 
 Entre na pasta do desafio e siga o `README.md` dela. Variáveis de ambiente ficam em `.env`
